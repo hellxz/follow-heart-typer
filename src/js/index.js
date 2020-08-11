@@ -43,7 +43,6 @@ $(function(){
 
     //初始化
     ipcRenderer.on('main-window-ready', () => {
-        // console.log("初始化方法执行")
         $('#duizhaoqu-div')[0].innerHTML = '<span id="default-duizhao-words">欢迎使用随心跟打器，祝您跟打愉快！</span>'
     })
 
@@ -198,8 +197,8 @@ $(function(){
         let defaultDiv = document.getElementById("default-duizhao-words")
         if(defaultDiv !== null){
             alert("开始跟打请先载文或发文")
-            document.getElementById("genda").textContent = ""
-            document.getElementById("genda").blur()
+            $("#genda").empty()
+            $("#genda").focusout() //引入新bug，首次清空标
             return false
         }
         
