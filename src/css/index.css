@@ -1,0 +1,53 @@
+@font-face {
+  font-family: 'SourceHanSerifHeavy';
+  src: url('../asset/font/source-han-serif.otf');
+}
+body{
+  height: 90%;
+  width: 100%;
+}
+#tips-bar{
+  position: relative;
+  width: 787px;
+}
+#tips-content{
+  position: relative;
+  width: 769px;
+}
+.text-input{
+  height: calc(100vh - 10rem);
+  position:relative;
+  font-family: SourceHanSerifHeavy;
+  line-height: normal;
+}
+#duizhaoqu-div{
+  height: 70%;
+  width: 100%;
+  font-size: 2rem;
+  background-color: #FFFFFF;
+  border-color: darkgrey;
+  border-width: 2px;
+  border-style: dashed;
+}
+#gendaqu-div{
+  height: 30%;
+  width: 100%;
+  font-size: 2rem;
+  background-color: brown;
+}
+#genda{
+  height: 100%;
+  width: 100%;
+  resize: none;
+}
+.type-true{
+  color: green;
+  background-color: darkgrey;
+}
+.type-false{
+  color: white;
+  background-color: red;
+}
+.type-none{
+  color: black;
+}
