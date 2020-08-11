@@ -37,6 +37,8 @@ $(function(){
     let sendArticleAutomic = true
     //是否自动发送成绩
     let sendTypeResultAutomic = false
+    //中文输入状态
+    let chineseInput = false
 
 
     //初始化
@@ -62,10 +64,22 @@ $(function(){
         }
     })
 
+    document.getElementById('genda').addEventListener('compositionstart', (e) => {
+        this.chineseInput = true
+        console.log("正在打中文，还没打完呢！")
+    }, false);
+
+    document.getElementById('genda').addEventListener('input', (e) => {
+        if(! this.chineseInput){
+            console.log("在打英文")
+            refreshTypeStatus()
+        }
+    },false);
+
     document.getElementById('genda').addEventListener('compositionend', (e) => {
-        console.log(e.target.value)
-        console.log(1)
+        console.log("打完中文了")
         refreshTypeStatus()
+        this.chineseInput = false
     }, false);
 
     ipcRenderer.on('zaiwen', () => {
@@ -85,7 +99,6 @@ $(function(){
         console.log('载文方法触发')
         const { clipboard } = require('electron')
         this.currentArticle = clipboard.readText('selection')
-        //上屏
         subsectionArticlePutFirstSectionOnScreen()
     }
 
@@ -143,8 +156,7 @@ $(function(){
             tempArray = articleArray.splice(0, this.maxSpanSumPerScreen)
             this.currentArticleMap.set(i+1, tempArray)
         }
-        
-        //上屏
+
         putSectionOnScreen(1)
     }
 
@@ -183,27 +195,41 @@ $(function(){
      */
     const refreshTypeStatus = () => {
         console.log('更新判定执行')
-        // debugger
+        let defaultDiv = document.getElementById("default-duizhao-words")
+        if(defaultDiv !== null){
+            alert("开始跟打请先载文或发文")
+            document.getElementById("genda").textContent = ""
+            document.getElementById("genda").blur()
+            return false
+        }
         
-        //获取当前对照区的文字数组
         let articleArray = this.currentArticleMap.get(this.currentSendingSection)
-        // let typeContent = $("#genda").val()
         let typeContent = document.getElementById("genda").innerText
+
+        for(let i in articleArray){
+            let span = $('#duizhaoqu-div').children()[i]
+            if($(span).attr('class') !== 'type-none'){
+                $(span).removeClass()
+                $(span).addClass('type-none')
+            }
+        }
+
         for(let i=0; i< typeContent.length; i++){
             let span = $('#duizhaoqu-div').children()[i]
             let originClassName = $(span).attr('class')
-            if(articleArray[i] === typeContent[i] && originClassName !== 'type-true'){
+            if(articleArray[i] === typeContent[i]){
                 $(span).removeClass()
                 $(span).addClass('type-true')
-            }else{
-                if(originClassName !== 'type-false'){
-                    $(span).removeClass()
-                    $(span).addClass('type-false')
-                    console.log('改错误状态')
-                    //TODO：记录错字，考虑何时将错字上屏
-                }
+                continue
+            }
+            if(originClassName !== 'type-false'){
+                $(span).removeClass()
+                $(span).addClass('type-false')
+                console.log('改错误状态')
             }
         }
+        //TODO 记录错字
+        //TODO 翻页实现
     }
 
     /**
@@ -230,6 +256,5 @@ $(function(){
         span.remove()
         return result
     }
-
 
 })
