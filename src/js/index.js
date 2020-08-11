@@ -126,6 +126,7 @@ const subsectionArticlePutFirstSectionOnScreen = () => {
     window.currentArticleMap = new Map()
     
     let articleArray = window.currentArticle.split('')
+    debugger
     window.currentArticleArray = articleArray
 
     let sectionCount = articleArray.length / window.maxSpanSumPerScreen
@@ -185,6 +186,7 @@ const genda = (event) => {
  */
 const refreshTypeStatus = () => {
     console.log('更新判定执行')
+    debugger
     //获取当前跟打区字符数
     //使用字符数值+1访问数组对应下标，进行快速判定
     let articleArray = window.currentArticleArray
