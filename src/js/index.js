@@ -157,6 +157,7 @@ $(function(){
         }
 
         putSectionOnScreen(1)
+        clearGenda()
     }
 
     /**
@@ -171,6 +172,10 @@ $(function(){
         }
         $('#default-duizhao-words').remove();
         $("#duizhaoqu-div").html(spanHTML)
+    }
+
+    const clearGenda = () => {
+        $("#genda").empty() //引入新bug，清空后无法聚焦，点击其它窗口再点回来才恢复
     }
 
     /**
@@ -197,8 +202,7 @@ $(function(){
         let defaultDiv = document.getElementById("default-duizhao-words")
         if(defaultDiv !== null){
             alert("开始跟打请先载文或发文")
-            $("#genda").empty()
-            $("#genda").focusout() //引入新bug，首次清空标
+            clearGenda()
             return false
         }
         
