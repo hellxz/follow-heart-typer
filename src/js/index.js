@@ -1,4 +1,4 @@
-const { app, ipcRenderer } = require('electron')
+const { app, ipcRenderer, remote } = require('electron')
 window.$ = window.jQuery = require('jquery');
 
 $(function(){
@@ -43,7 +43,7 @@ $(function(){
 
     //初始化
     ipcRenderer.on('main-window-ready', () => {
-        $('#duizhaoqu-div')[0].innerHTML = '<span id="default-duizhao-words">欢迎使用随心跟打器，祝您跟打愉快！</span>'
+        $('#duizhaoqu-div')[0].innerHTML = '<span id="default-duizhao-words">欢迎使用随心跟打器，祝您跟打愉快！发文请按F6，载文请按F4</span>'
     })
 
     /**
@@ -107,7 +107,7 @@ $(function(){
     const sendArticleFromSqlLite = () => {
         //TODO 数据库读取文章，将赋值给this.currentArticle渲染上屏
         // ipcRenderer.send('read-article-from-sqllite') //示例，后续可能会通过子容器传递
-        this.currentArticle = '听见你说：朝阳起又落，晴雨难测，道路是脚步多，我已习惯，你突然间的自我，挥挥洒洒，将自然看通透~那就不要留时光一过不再有，你远眺的天空，挂更多的彩虹，我会轻轻地，将你豪情放在心头，在寒冬时候，就回忆你湿柔。听见你说：朝阳起又落，晴雨难测，道路是脚步多，我已习惯，你突然间的自我，挥挥洒洒，将自然看通透~那就不要留时光一过不再有，你远眺的天空，挂更多的彩虹，我会轻轻地，将你豪情放在心头，在寒冬时候，就回忆你湿柔。'
+        this.currentArticle = '听见你说：朝阳起又落，晴雨难测，道路是脚步多，我已习惯，你突然间的自我，挥挥洒洒，将自然看通透~那就不要留时光一过不再有，你远眺的天空，挂更多的彩虹，我会轻轻地，将你豪情放在心头，在寒冬时候，就回忆你温柔。听见你说：朝阳起又落，晴雨难测，道路是脚步多，我已习惯，你突然间的自我，挥挥洒洒，将自然看通透~那就不要留时光一过不再有，你远眺的天空，挂更多的彩虹，我会轻轻地，将你豪情放在心头，在寒冬时候，就回忆你温柔。'
         subsectionArticlePutFirstSectionOnScreen()
     }
 
@@ -175,7 +175,7 @@ $(function(){
     }
 
     const clearGenda = () => {
-        $("#genda").empty() //引入新bug，清空后无法聚焦，点击其它窗口再点回来才恢复
+        $("#genda").empty()
     }
 
     /**
@@ -201,8 +201,8 @@ $(function(){
         console.log('更新判定执行')
         let defaultDiv = document.getElementById("default-duizhao-words")
         if(defaultDiv !== null){
-            alert("开始跟打请先载文或发文")
             clearGenda()
+            remote.dialog.showErrorBox('错误提示','请先载文或发文再进行跟打');
             return false
         }
         
