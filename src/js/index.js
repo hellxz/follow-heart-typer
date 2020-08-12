@@ -90,7 +90,7 @@ $(function(){
     const sendArticleFromSqlLite = () => {
         //TODO 数据库读取文章，将赋值给this.currentArticle渲染上屏
         // ipcRenderer.send('read-article-from-sqllite') //示例，后续可能会通过子容器传递
-        this.currentArticle = '听见你说：朝阳起又落，晴雨难测，道路是脚步多，我已习惯，你突然间的自我，挥挥洒洒，将自然看通透~那就不要留时光一过不再有，你远眺的天空，挂更多的彩虹，我会轻轻地，将你豪情放在心头，在寒冬时候，就回忆你温柔。听见你说：朝阳起又落，晴雨难测，道路是脚步多，我已习惯，你突然间的自我，挥挥洒洒，将自然看通透~那就不要留时光一过不再有，你远眺的天空，挂更多的彩虹，我会轻轻地，将你豪情放在心头，在寒冬时候，就回忆你温柔。'
+        this.currentArticle = '听见你说：朝阳起又落，晴雨难测，道路是脚步多，我已习惯，你突然间的自我，挥挥洒洒，将自然看通透~那就不要留时光一过不再有，你远眺的天空，挂更多的彩虹，我会轻轻地，将你豪情放在心头，在寒冬时候，就回忆你温柔。听见你说：朝阳起又落，晴雨难测，道路是脚步多，我已习惯，你突然间的自我，挥挥洒洒，将自然看通透~那就不要留时光一过不再有，你远眺的天空，挂更多的彩虹，我会轻轻地，将你豪情放在心头，在寒冬时候，就回忆你温柔。听见你说：朝阳起又落，晴雨难测，道路是脚步多，我已习惯，你突然间的自我，挥挥洒洒，将自然看通透~那就不要留时光一过不再有，你远眺的天空，挂更多的彩虹，我会轻轻地，将你豪情放在心头，在寒冬时候，就回忆你温柔。'
         subsectionArticlePutFirstSectionOnScreen()
     }
 
@@ -180,16 +180,16 @@ $(function(){
         for(let i in articleArray){
             let span = spans[i]
             //判定着色
-            let currentGendaIndex = 0
+            let gendaInputLength = 0
             if(this.currentSendingSection == 1){
-                currentGendaIndex = typeContent.length
+                gendaInputLength = typeContent.length
             }
             else{
                 //两段以上，应使用输入长度减去已翻页的部分
-                currentGendaIndex = typeContent.length - (this.currentSendingSection -1) * this.maxSpanSumPerScreen
+                gendaInputLength = typeContent.length - (this.currentSendingSection -1) * this.maxSpanSumPerScreen
             }
             
-            if(i < currentGendaIndex) { //确定typeContent的除之前跟打部分的值
+            if(i < gendaInputLength) { //确定typeContent的除之前跟打部分的值
                 console.log(i)
                 let originClassName = $(span).attr('class')
                 
@@ -200,8 +200,9 @@ $(function(){
                     continue
                 }
 
-                //非首屏打对
-                if(articleArray[i] === typeContent[i + (this.currentSendingSection -1) * this.maxSpanSumPerScreen]){
+                //非首屏打对   TIPS:——>for in循环的下标是字符串
+                let inputIndex = parseInt(i) + (this.currentSendingSection -1) * this.maxSpanSumPerScreen
+                if(articleArray[i] === typeContent[inputIndex]){
                     $(span).removeClass()
                     $(span).addClass('type-true')
                     continue
