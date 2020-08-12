@@ -1,4 +1,4 @@
-const { app, ipcRenderer, remote } = require('electron')
+const { app, ipcRenderer, remote, shell } = require('electron')
 window.$ = window.jQuery = require('jquery');
 
 $(function(){
@@ -46,23 +46,33 @@ $(function(){
         $('#duizhaoqu-div')[0].innerHTML = '<span id="default-duizhao-words">欢迎使用随心跟打器，祝您跟打愉快！发文请按F6，载文请按F4</span>'
     })
 
-    document.getElementById('genda').addEventListener('compositionstart', (e) => {
+    /**
+     * 以下三个事件作为互锁控制中文输入状态，减少中文输入中状态值取到字母的问题。
+     * 经测试，不同平台上事件触发不同
+     * - Windows平台上可正常触发compositionstart与compositionend事件，如不加中文输入状态控制，input事件也会被触发
+     * - Linux平台输入法都是挂靠在输入引擎上的，所以只能得到input事件（中文输入状态的标识会失效）
+     * - Mac平台未测
+     */
+    $('#genda').on('compositionstart', (e) => {
         this.chineseInput = true
         console.log("正在打中文，还没打完呢！")
-    }, false);
+    })
 
-    document.getElementById('genda').addEventListener('input', (e) => {
+    $('#genda').on('input', (e) => {
         if(! this.chineseInput){
             console.log("在打英文")
             refreshTypeStatus()
         }
-    },false);
+        if(e.keyCode === 8){ //退格键
+            //TODO: 回改数+1
+        }
+    })
 
-    document.getElementById('genda').addEventListener('compositionend', (e) => {
+    $('#genda').on('compositionend', (e) => {
         console.log("打完中文了")
         refreshTypeStatus()
         this.chineseInput = false
-    }, false);
+    })
 
     ipcRenderer.on('zaiwen', () => {
         console.log("载文事件触发")
@@ -139,8 +149,10 @@ $(function(){
             this.currentArticleMap.set(i+1, tempArray)
         }
 
+        //上屏前清理当前屏幕上的历史映像，开启可输入状态
         putSectionOnScreen(1)
         clearGenda()
+        $("#genda").attr('contenteditable', true)
     }
 
     /**
@@ -179,28 +191,28 @@ $(function(){
 
         for(let i in articleArray){
             let span = spans[i]
-            //判定着色
+            //确定当前对照区与跟打区对应的比对区间
             let gendaInputLength = 0
             if(this.currentSendingSection == 1){
-                gendaInputLength = typeContent.length
+                gendaInputLength = typeContent.length //首段
             }
             else{
-                //两段以上，应使用输入长度减去已翻页的部分
+                //非首段，应使用输入长度减去已翻页的部分
                 gendaInputLength = typeContent.length - (this.currentSendingSection -1) * this.maxSpanSumPerScreen
             }
-            
-            if(i < gendaInputLength) { //确定typeContent的除之前跟打部分的值
-                console.log(i)
+            //判定着色
+            if(i < gendaInputLength) { //只判定当前新输入部分（忽略上n段与当前段没打的部分）
+                // console.log(i)
                 let originClassName = $(span).attr('class')
                 
-                //首屏打对
+                //首段打对
                 if(this.currentSendingSection === 1 && articleArray[i] === typeContent[i] ){
                     $(span).removeClass()
                     $(span).addClass('type-true')
                     continue
                 }
 
-                //非首屏打对   TIPS:——>for in循环的下标是字符串
+                //非首段打对   TIPS:——>for in循环的下标是字符串
                 let inputIndex = parseInt(i) + (this.currentSendingSection -1) * this.maxSpanSumPerScreen
                 if(articleArray[i] === typeContent[inputIndex]){
                     $(span).removeClass()
@@ -212,7 +224,7 @@ $(function(){
                 if(originClassName !== 'type-false'){
                     $(span).removeClass()
                     $(span).addClass('type-false')
-                    console.log('改错误状态')
+                    console.log('有打错的哦~')
                 }
             }
             //移除未跟打span着色(回改)
@@ -245,9 +257,9 @@ $(function(){
             this.currentSendingSection = nextSendingSection
         }
         else{
-            //限制跟打区输入
-            // debugger
-            // $("#genda").attr('contenteditable', false)
+            //打字完成，限制跟打区输入
+            $("#genda").attr('contenteditable', false)
+            shell.beep()
         }
     }
 
@@ -257,11 +269,10 @@ $(function(){
     const stopTheWorldSaveData = () =>{
         console.log('停一小会儿，掏小本本记成绩~')
         
-        //限制跟打区输入
         //TODO 暂停计时器
         //记录当前成绩
         //记录开始时间
-        //记录击键数
+        //记录击键数：Linux可能会有点误差
         //更新错误数/回改数(退格键数)
         //更新已打
         //打完屏幕结尾更新文段上屏，下一段
