@@ -14,22 +14,34 @@
 
 本软件使用yarn作为node.js的包管理器，需提前装好node.js与npm，以下区分操作系统部分在前，通用部分在后
 
-### 1、安装与配置Yarn
+### 1、安装Yarn
 
 -   Windows：使用exe安装自动添加path 或 使用通用方式
 
 -   通用方式：npm全局安装yarn `npm install yarn -g`
 
-    -   配置yarn（仅通用方式）：
+    
 
-        -   设置缓存目录：`yarn config set cache-folder "/path/to/path"`
+    
 
-            >   1.  Windows环境需删除`用户变量`的`PATH`的`C:\Users\用户名\AppData\Roaming\npm` 部分
-            >
-            >   2.  如果有yarn相关的变量一并删除
-            >   3.  `用户变量`的`PATH`后追加`;C:\Users\用户名\AppData\Local\Yarn\Data\global\node_modules\.bin  `
+### 2、配置Yarn
 
-        -   设置淘宝镜像：`yarn config set registry "https://registry.npm.taobao.org"`
+-   设置缓存目录：
+
+    ```bash
+    yarn config set cache-folder "/path/to/path"
+    ```
+
+    >   1.  Windows环境需删除`用户变量`的`PATH`的`C:\Users\用户名\AppData\Roaming\npm` 部分
+    >
+    >   2.  如果有yarn相关的变量一并删除
+    >   3.  `用户变量`的`PATH`后追加`;C:\Users\用户名\AppData\Local\Yarn\Data\global\node_modules\.bin  `
+
+-   设置淘宝镜像：
+
+    ```bash
+    yarn config set registry "https://registry.npm.taobao.org"
+    ```
 
 ### 2、使用Electron国内镜像加速下载
 
