@@ -61,6 +61,7 @@ app.on('ready', createWindow);
 // for applications and their menu bar to stay active until the user quits
 // explicitly with Cmd + Q.
 app.on('window-all-closed', () => {
+  //TODO 记录成绩持久化数据库
   if (process.platform !== 'darwin') {
     app.quit();
   }

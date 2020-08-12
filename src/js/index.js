@@ -30,7 +30,7 @@ $(function(){
     //当前文章分段总数
     let currentSectionSum = 0
     //当前文章发文段数
-    let currentSendingSection = 1
+    let currentSendingSection = 0
     //当前对照区最多可发的字数(span数)
     let maxSpanSumPerScreen = 0
     //发文状态：自动/手动下一段
@@ -44,23 +44,6 @@ $(function(){
     //初始化
     ipcRenderer.on('main-window-ready', () => {
         $('#duizhaoqu-div')[0].innerHTML = '<span id="default-duizhao-words">欢迎使用随心跟打器，祝您跟打愉快！发文请按F6，载文请按F4</span>'
-    })
-
-    /**
-     * 键盘输入事件处理
-     */
-    $("#wrapper-box").on("keyup", (e) => {
-        switch(e.keyCode){
-            case 115:
-                //载文事件不处理
-                break;
-            case 17:
-                //Control键不操作
-                break;
-            default:
-                //默认跟打
-                genda(e);
-        }
     })
 
     document.getElementById('genda').addEventListener('compositionstart', (e) => {
@@ -179,22 +162,6 @@ $(function(){
     }
 
     /**
-     * 跟打（看打）
-     * @param {键盘输入事件} event 
-     */
-    const genda = (event) => {
-        // console.log(event.keyCode)
-        //记录开始时间
-        //记录击键数
-        //更新错误数/回改数(退格键数)
-        //更新已打
-        //打完屏幕结尾更新文段上屏，下一段
-        //更新当前段数
-        //记录结束时间
-        //计算成绩
-    }
-
-    /**
      * 更新跟打判定
      */
     const refreshTypeStatus = () => {
@@ -208,31 +175,98 @@ $(function(){
         
         let articleArray = this.currentArticleMap.get(this.currentSendingSection)
         let typeContent = document.getElementById("genda").innerText
+        let spans = $('#duizhaoqu-div').children()
 
         for(let i in articleArray){
-            let span = $('#duizhaoqu-div').children()[i]
-            if($(span).attr('class') !== 'type-none'){
+            let span = spans[i]
+            //判定着色
+            let currentGendaIndex = 0
+            if(this.currentSendingSection == 1){
+                currentGendaIndex = typeContent.length
+            }
+            else{
+                //两段以上，应使用输入长度减去已翻页的部分
+                currentGendaIndex = typeContent.length - (this.currentSendingSection -1) * this.maxSpanSumPerScreen
+            }
+            
+            if(i < currentGendaIndex) { //确定typeContent的除之前跟打部分的值
+                console.log(i)
+                let originClassName = $(span).attr('class')
+                
+                //首屏打对
+                if(this.currentSendingSection === 1 && articleArray[i] === typeContent[i] ){
+                    $(span).removeClass()
+                    $(span).addClass('type-true')
+                    continue
+                }
+
+                //非首屏打对
+                if(articleArray[i] === typeContent[i + (this.currentSendingSection -1) * this.maxSpanSumPerScreen]){
+                    $(span).removeClass()
+                    $(span).addClass('type-true')
+                    continue
+                }
+
+                //打错
+                if(originClassName !== 'type-false'){
+                    $(span).removeClass()
+                    $(span).addClass('type-false')
+                    console.log('改错误状态')
+                }
+            }
+            //移除未跟打span着色(回改)
+            else if($(span).attr('class') !== 'type-none'){
                 $(span).removeClass()
                 $(span).addClass('type-none')
             }
         }
 
-        for(let i=0; i< typeContent.length; i++){
-            let span = $('#duizhaoqu-div').children()[i]
-            let originClassName = $(span).attr('class')
-            if(articleArray[i] === typeContent[i]){
-                $(span).removeClass()
-                $(span).addClass('type-true')
-                continue
-            }
-            if(originClassName !== 'type-false'){
-                $(span).removeClass()
-                $(span).addClass('type-false')
-                console.log('改错误状态')
-            }
+        // 检查是否需要翻页
+        checkIsLastOrTurn2NextPage()
+    }
+
+    /**
+     * 检测到达页尾及翻页实现
+     */
+    const checkIsLastOrTurn2NextPage = () =>{
+        //未打完跳过
+        if($("#duizhaoqu-div .type-none").length !== 0){
+            return false
         }
-        //TODO 记录错字
-        //TODO 翻页实现
+        
+        //保存当前记录
+        stopTheWorldSaveData()
+
+        //判定是否有下一页，有则跳转下一页再次开始计时，无则停止，限制跟打区输入
+        let nextSendingSection = this.currentSendingSection + 1
+        if(nextSendingSection <= this.currentSectionSum){
+            putSectionOnScreen(nextSendingSection)
+            this.currentSendingSection = nextSendingSection
+        }
+        else{
+            //限制跟打区输入
+            // debugger
+            // $("#genda").attr('contenteditable', false)
+        }
+    }
+
+    /**
+     * 记录当前页跟打错字数
+     */
+    const stopTheWorldSaveData = () =>{
+        console.log('停一小会儿，掏小本本记成绩~')
+        
+        //限制跟打区输入
+        //TODO 暂停计时器
+        //记录当前成绩
+        //记录开始时间
+        //记录击键数
+        //更新错误数/回改数(退格键数)
+        //更新已打
+        //打完屏幕结尾更新文段上屏，下一段
+        //更新当前段数
+        //记录结束时间
+        //计算成绩
     }
 
     /**

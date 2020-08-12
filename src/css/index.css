@@ -39,6 +39,7 @@ body{
   width: 100%;
   resize: none;
   overflow-y: scroll;
+  overflow-x: none;
 }
 .type-true{
   color: green;
