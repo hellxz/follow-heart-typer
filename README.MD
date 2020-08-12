@@ -43,7 +43,7 @@
     yarn config set registry "https://registry.npm.taobao.org"
     ```
 
-### 2、使用Electron国内镜像加速下载
+### 3、使用Electron国内镜像加速下载
 
 >   在安装过程中，electron 模块会通过 electron-download 为您的平台下载 Electron 的来自Github的预编译二进制文件，需要单独设置下载源以加速
 
@@ -57,7 +57,7 @@
 
     修改之后 `source 修改的文件` 即可。
 
-### 3、启动本项目
+### 4、启动本项目
 
 项目克隆到本地
 
@@ -78,7 +78,7 @@ yarn install
 yarn start
 ```
 
-### 4、开发调试技巧、简单说明
+### 5、开发调试技巧、简单说明
 
 -   项目运行后，会开启调式窗口
 
@@ -86,4 +86,5 @@ yarn start
 -   electron会创建一个主窗口，它的权力是最大的，可以完成很多操作，如创建窗口等
 -   其他渲染页面与主窗口使用IPC通信（主窗口执有`ipcMain`，渲染页面执有`ipcRenderer`，分别使用这两个对象进行监听事件）
 -   修改窗口级代码，需要重运行项目才生效
+-   暂时未提供打包的配置（无CI无配置平台）
 -   临时想到这，etc
