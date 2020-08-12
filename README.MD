@@ -62,6 +62,8 @@ cd follow-heart-typer
 yarn install
 ```
 
+> 国内用户参考[这篇文档](https://www.electronjs.org/docs/tutorial/installation#%E8%87%AA%E5%AE%9A%E4%B9%89%E9%95%9C%E5%83%8F%E5%92%8C%E7%BC%93%E5%AD%98)设置下electron的代理，在安装过程中，electron 模块会通过 electron-download 为您的平台下载 Electron 的来自Github的预编译二进制文件。 
+
 启动项目
 
 ```bash
