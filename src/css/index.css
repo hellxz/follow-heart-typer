@@ -29,14 +29,17 @@ body{
   width: 100%;
   font-size: 2rem;
   background-color: #FFFFFF;
-  border: 2px dashed darkgrey;
+  /* border: 1px dashed darkgrey; */
+  outline:darkgrey dashed medium;
+  line-break: anywhere;
 }
 #gendaqu-div{
   height: 30%;
   width: 100%;
   font-size: 2rem;
   background-color: #FFFFFF;
-  border: 2px solid brown;
+  /* border: 2px solid brown; */
+  outline:brown solid medium;
 }
 #genda{
   height: 100%;
