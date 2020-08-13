@@ -43,7 +43,7 @@ $(function(){
 
     //初始化
     ipcRenderer.on('main-window-ready', () => {
-        $('#duizhaoqu-div')[0].innerHTML = '<span id="default-duizhao-words">欢迎使用随心跟打器，祝您跟打愉快！发文请按F6，载文请按F4</span>'
+        $('#duizhaoqu-div')[0].innerHTML = '<span id="default-duizhao-words">欢迎使用随心跟打器，祝您跟打愉快！发文请按F6，载文请按F4，调试请按F12</span>'
     })
 
     /**

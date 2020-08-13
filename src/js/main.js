@@ -37,7 +37,7 @@ const createWindow = () => {
     label: '载文',
     accelerator: 'F4',
     click: () => {
-      console.log('载文') 
+      console.log('load artile now') 
       mainWindow.send('zaiwen')
     }
   }))
@@ -45,10 +45,26 @@ const createWindow = () => {
     label: '发文',
     accelerator: 'F6',
     click: () => {
-      console.log('发文') 
+      console.log('send article now') 
       mainWindow.send('fawen')
     }
   }))
+
+  menu.append(new MenuItem({
+    label: '调试',
+    accelerator: 'F12',
+    click: () => {
+      console.log('help clicked') 
+      // mainWindow.webContents.toggleDevTools()
+      if(mainWindow.webContents.isDevToolsOpened()){
+        mainWindow.webContents.closeDevTools()
+      }else{
+        mainWindow.webContents.openDevTools({"mode":"undocked"}) //设置调试器模式
+      }
+    }
+  }))
+
+
   Menu.setApplicationMenu(menu)
 };
 
