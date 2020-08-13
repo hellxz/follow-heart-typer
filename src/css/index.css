@@ -1,3 +1,7 @@
+*{
+  margin: 0px;
+  padding: 0px
+}
 @font-face {
   font-family: 'SourceHanSerifHeavy';
   src: url('../asset/font/source-han-serif.otf');

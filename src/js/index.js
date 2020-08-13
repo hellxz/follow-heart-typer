@@ -43,7 +43,7 @@ $(function(){
 
     //初始化
     ipcRenderer.on('main-window-ready', () => {
-        $('#duizhaoqu-div')[0].innerHTML = '<span id="default-duizhao-words">欢迎使用随心跟打器，祝您跟打愉快！发文请按F6，载文请按F4，调试请按F12</span>'
+        addDefaultDuiZhaoDiv()
     })
 
     /**
@@ -84,6 +84,23 @@ $(function(){
         sendArticleFromSqlLite()
     })
 
+    ipcRenderer.on('window-resize', () => {
+        console.log("改变窗口size事件触发")
+        let defaultDiv = document.getElementById("default-duizhao-words")
+        if(defaultDiv === null){
+            if(this.currentArticle === ''){
+                addDefaultDuiZhaoDiv()
+            }else{
+                subsectionArticlePutFirstSectionOnScreen()
+            }
+        }
+    })
+
+    //添加默认对照区提示
+    const addDefaultDuiZhaoDiv = () => {
+        $('#duizhaoqu-div')[0].innerHTML = '<span id="default-duizhao-words">欢迎使用随心跟打器，祝您跟打愉快！发文请按F6，载文请按F4，调试请按F12</span>'
+    }
+
     /**
      * 剪贴板载文上屏
      */
@@ -115,6 +132,9 @@ $(function(){
 
     /**
      * 分段文章并上屏首段
+     * 
+     * TODO: 问题：为什么理论div宽度允许放下整好宽度的div，却会换行？ 
+     *       示例：div宽320px，span宽32px，按理讲可放10个第一行，但是假如第9个span是个符号的（也是32px宽），第十列会换行！
      */
     const subsectionArticlePutFirstSectionOnScreen = () => {
         //读取文字div长宽
@@ -125,7 +145,7 @@ $(function(){
         //计算对照区最多可装多少span，不考虑余数（只少不能多）
         let horizontalSpanCount = parseInt(divWidth / spanSize.width)
         let verticalSpanCount = parseInt(divHeight / spanSize.height)
-        this.maxSpanSumPerScreen = horizontalSpanCount * verticalSpanCount
+        this.maxSpanSumPerScreen = horizontalSpanCount * verticalSpanCount //Mark:临时方案，每屏减5个span，为测试先不加
         console.log("当前div最多放"+ this.maxSpanSumPerScreen + "个span")
 
         //载文分段

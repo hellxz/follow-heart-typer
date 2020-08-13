@@ -25,11 +25,19 @@ const createWindow = () => {
 
   // Open the DevTools.
   mainWindow.webContents.openDevTools();
-  
+
   //使用webContents的did-finish-load事件来达到启动时加载功能
   mainWindow.webContents.on('did-finish-load', () => {
     mainWindow.send('main-window-ready')
   })
+
+  mainWindow.on('resize', () => {
+    let size   = mainWindow.getSize();
+    let width  = size[0];
+    let height = size[1];
+    console.log("width x height: " + width + 'x' + height);
+    mainWindow.send('window-resize')
+});
 
   // 绑定菜单，注册快捷键
   const menu = new Menu()
