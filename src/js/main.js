@@ -37,7 +37,11 @@ const createWindow = () => {
     let height = size[1];
     console.log("width x height: " + width + 'x' + height);
     mainWindow.send('window-resize')
-});
+  })
+
+  mainWindow.on('blur', () => {
+    mainWindow.send('window-blur')
+  })
 
   // 绑定菜单，注册快捷键
   const menu = new Menu()
