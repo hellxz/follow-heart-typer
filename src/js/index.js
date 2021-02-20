@@ -74,16 +74,18 @@ ipcRenderer.on('main-window-ready', () => {
 
 //窗口焦点消失
 ipcRenderer.on('window-blur', () => {
-    removeScoreTimer(this.scoreTimer)
+    removeScoreTimer(scoreTimer)
 })
 
 ipcRenderer.on('chongda', () => {
     console.log("重打事件触发")
     //TODO 重置计时器、成绩
-    this.startTime = null
-    removeScoreTimer(this.scoreTimer)
+    startTime = null
+    removeScoreTimer(scoreTimer)
     //重置发文段、清空跟打区
-    this.currentSendingSection = 1
+    currentSendingSection = 1
+    inputKeyCount=0
+    typeFalseCount=0
     clearGenda()
     subsectionArticlePutFirstSectionOnScreen()
 })
@@ -102,7 +104,7 @@ ipcRenderer.on('window-resize', () => {
     console.log("改变窗口size事件触发")
     let defaultDiv = document.getElementById("default-duizhao-words")
     if(defaultDiv === null){
-        if(this.currentArticle === ''){
+        if(currentArticle === ''){
             addDefaultDuiZhaoDiv()
         }else{
             subsectionArticlePutFirstSectionOnScreen()
@@ -120,12 +122,12 @@ $(function(){
      * - Mac平台未测
      */
     $('#genda').on('compositionstart', (e) => {
-        this.chineseInput = true
+        chineseInput = true
         console.log("正在打中文，还没打完呢！")
     })
 
     $('#genda').on('input', (e) => {
-        if(! this.chineseInput){
+        if(! chineseInput){
             console.log("在打英文")
             refreshTypeStatus()
             //刚开始跟打时，启动成绩计算定时器
@@ -144,7 +146,7 @@ $(function(){
     $('#genda').on('compositionend', (e) => {
         console.log("打完中文了")
         refreshTypeStatus()
-        this.chineseInput = false
+        chineseInput = false
         //刚开始跟打时，启动成绩计算定时器
         openScoreTimerIfStartNow()
     })
@@ -162,7 +164,7 @@ const addDefaultDuiZhaoDiv = () => {
 const loadArticleFromClipboard = () => {
     console.log('载文方法触发')
     const { clipboard } = require('electron')
-    this.currentArticle = clipboard.readText('selection')
+    currentArticle = clipboard.readText('selection')
     subsectionArticlePutFirstSectionOnScreen()
 }
 
@@ -170,9 +172,9 @@ const loadArticleFromClipboard = () => {
  * 数据库中选择文章，自动发文
  */
 const sendArticleFromSqlLite = () => {
-    //TODO 数据库读取文章，将赋值给this.currentArticle渲染上屏
+    //TODO 数据库读取文章，将赋值给currentArticle渲染上屏
     // ipcRenderer.send('read-article-from-sqllite') //示例，后续可能会通过子容器传递
-    this.currentArticle = '听见你说：朝阳起又落，晴雨难测，道路是脚步多，我已习惯，你突然间的自我，挥挥洒洒，将自然看通透~那就不要留时光一过不再有，你远眺的天空，挂更多的彩虹，我会轻轻地，将你豪情放在心头，在寒冬时候，就回忆你温柔。听见你说：朝阳起又落，晴雨难测，道路是脚步多，我已习惯，你突然间的自我，挥挥洒洒，将自然看通透~那就不要留时光一过不再有，你远眺的天空，挂更多的彩虹，我会轻轻地，将你豪情放在心头，在寒冬时候，就回忆你温柔。听见你说：朝阳起又落，晴雨难测，道路是脚步多，我已习惯，你突然间的自我，挥挥洒洒，将自然看通透~那就不要留时光一过不再有，你远眺的天空，挂更多的彩虹，我会轻轻地，将你豪情放在心头，在寒冬时候，就回忆你温柔。'
+    currentArticle = '听见你说：朝阳起又落，晴雨难测，道路是脚步多，我已习惯，你突然间的自我，挥挥洒洒，将自然看通透~那就不要留时光一过不再有，你远眺的天空，挂更多的彩虹，我会轻轻地，将你豪情放在心头，在寒冬时候，就回忆你温柔。听见你说：朝阳起又落，晴雨难测，道路是脚步多，我已习惯，你突然间的自我，挥挥洒洒，将自然看通透~那就不要留时光一过不再有，你远眺的天空，挂更多的彩虹，我会轻轻地，将你豪情放在心头，在寒冬时候，就回忆你温柔。听见你说：朝阳起又落，晴雨难测，道路是脚步多，我已习惯，你突然间的自我，挥挥洒洒，将自然看通透~那就不要留时光一过不再有，你远眺的天空，挂更多的彩虹，我会轻轻地，将你豪情放在心头，在寒冬时候，就回忆你温柔。'
     subsectionArticlePutFirstSectionOnScreen()
 }
 
@@ -181,7 +183,7 @@ const sendArticleFromSqlLite = () => {
  */
 const loadArticleFromQQgroup = () => {
     //TODO c语言类库读取操作系统参数完成功能
-    this.currentArticle = fromQQGroup()
+    currentArticle = fromQQGroup()
     subsectionArticlePutFirstSectionOnScreen()
 }
 
@@ -200,28 +202,28 @@ const subsectionArticlePutFirstSectionOnScreen = () => {
     //计算对照区最多可装多少span，不考虑余数（只少不能多）
     let horizontalSpanCount = parseInt(divWidth / spanSize.width)
     let verticalSpanCount = parseInt(divHeight / spanSize.height)
-    this.maxSpanSumPerScreen = horizontalSpanCount * verticalSpanCount //Mark:临时方案，每屏减5个span，为测试先不加
-    console.log("当前div最多放"+ this.maxSpanSumPerScreen + "个span")
+    maxSpanSumPerScreen = horizontalSpanCount * verticalSpanCount //Mark:临时方案，每屏减5个span，为测试先不加
+    console.log("当前div最多放"+ maxSpanSumPerScreen + "个span")
 
     //载文分段
-    this.currentArticleMap = new Map()
+    currentArticleMap = new Map()
     
-    let articleArray = this.currentArticle.split('')
+    let articleArray = currentArticle.split('')
 
-    let sectionCount = articleArray.length / this.maxSpanSumPerScreen
+    let sectionCount = articleArray.length / maxSpanSumPerScreen
 
     if((tempCount = parseInt(sectionCount)) < sectionCount) {
         sectionCount = tempCount + 1
     }
 
-    this.currentSectionSum = sectionCount
-    this.currentSendingSection = 1
+    currentSectionSum = sectionCount
+    currentSendingSection = 1
 
     let tempArray
     for(i=0; i<sectionCount; i++){
         //每次删除一段数量，使用返回被删部分数组保存map
-        tempArray = articleArray.splice(0, this.maxSpanSumPerScreen)
-        this.currentArticleMap.set(i+1, tempArray)
+        tempArray = articleArray.splice(0, maxSpanSumPerScreen)
+        currentArticleMap.set(i+1, tempArray)
     }
 
     //上屏前清理当前屏幕上的历史映像，开启可输入状态
@@ -235,7 +237,7 @@ const subsectionArticlePutFirstSectionOnScreen = () => {
  * @param {待上屏的段号} nextSection 
  */
 const putSectionOnScreen = (nextSection) => {
-    let nextSectionArray = this.currentArticleMap.get(nextSection)
+    let nextSectionArray = currentArticleMap.get(nextSection)
     let spanHTML = ''
     for (var i in nextSectionArray) {
         spanHTML += '<span class="type-none">' + nextSectionArray[i] + '</span>'
@@ -261,11 +263,11 @@ const refreshTypeStatus = () => {
     }
 
     //设置起始时间
-    if(this.startTime === undefined || this.startTime === null){
-        this.startTime = new Date().getTime()
+    if(startTime === undefined || startTime === null){
+        startTime = new Date().getTime()
     }
     
-    let articleArray = this.currentArticleMap.get(this.currentSendingSection)
+    let articleArray = currentArticleMap.get(currentSendingSection)
     let typeContent = document.getElementById("genda").innerText
     let spans = $('#duizhaoqu-div').children()
 
@@ -273,17 +275,17 @@ const refreshTypeStatus = () => {
         let span = spans[i]
         //确定当前对照区与跟打区对应的比对区间
         let gendaInputLength = 0
-        if(this.currentSendingSection == 1){
+        if(currentSendingSection == 1){
             gendaInputLength = typeContent.length //首段
         }
         else{
             //非首段，应使用输入长度减去已翻页的部分
-            gendaInputLength = typeContent.length - (this.currentSendingSection -1) * this.maxSpanSumPerScreen
+            gendaInputLength = typeContent.length - (currentSendingSection -1) * maxSpanSumPerScreen
         }
         //判定着色
         if(i < gendaInputLength) { //只判定当前新输入部分（忽略上n段与当前段没打的部分）
             //首段与非首段打对   TIPS:——>for in循环的下标i是字符串，另外首段后边的乘式为0，不影响结果
-            let inputIndex = parseInt(i) + (this.currentSendingSection -1) * this.maxSpanSumPerScreen
+            let inputIndex = parseInt(i) + (currentSendingSection -1) * maxSpanSumPerScreen
             
             let duizhao = articleArray[i]
             let input = typeContent[inputIndex]
@@ -294,6 +296,7 @@ const refreshTypeStatus = () => {
             if(duizhao === input || status1 || status2){
                 $(span).removeClass()
                 $(span).addClass('type-true')
+                //$('#duizhaoqu-div .type-true').length
                 continue
             }
             
@@ -302,7 +305,6 @@ const refreshTypeStatus = () => {
                 $(span).removeClass()
                 $(span).addClass('type-false')
                 console.log('有打错的哦~')
-                this.typeFalseCount += 1
             }
         }
         //移除未跟打span着色(回改)
@@ -326,19 +328,19 @@ const checkIsLastOrTurn2NextPage = () =>{
     }
 
     //判定是否有下一页，有则跳转下一页，无则限制跟打区输入
-    let nextSendingSection = this.currentSendingSection + 1
-    if(nextSendingSection <= this.currentSectionSum){
+    let nextSendingSection = currentSendingSection + 1
+    if(nextSendingSection <= currentSectionSum){
         //TODO 添加记录本页成绩功能
         putSectionOnScreen(nextSendingSection)
-        this.currentSendingSection = nextSendingSection
+        currentSendingSection = nextSendingSection
     }
     else{
         //打字完成，限制跟打区输入
         $("#genda").attr('contenteditable', false)
         shell.beep()
         //停止定时器，结算最终成绩存文件或存库
-        removeScoreTimer(this.scoreTimer)
-        saveScoreAndPutOnScreen(true)
+        removeScoreTimer(scoreTimer)
+        //TODO 存库上屏
     }
 }
 
@@ -373,13 +375,8 @@ const computeSpanWhitchUnderDivSize = (divElementId) => {
  */
 const updateBackModifyCount = (keyCode) => {
     if(keyCode === 8){ //退格键
-        if(this.backModifyCount !== undefined){
-            this.backModifyCount += 1
-        }
-        else{
-            this.backModifyCount = 1
-        }
-        console.log("当前回改数为" + this.backModifyCount)
+        backModifyCount += 1
+        console.log("当前回改数为" + backModifyCount)
     }
 }
 
@@ -387,15 +384,17 @@ const updateBackModifyCount = (keyCode) => {
  * 记录成绩并上屏
  * @param saveDB 是否保存到数据库
  */
-const saveScoreAndPutOnScreen = () =>{
+const putScoreOnScreen = () =>{
     console.log('停一小会儿，掏小本本记成绩~')
     computScore()
     //记录当前成绩
     //记录开始时间
     //记录击键数：Linux可能会有点误差
-    $("#type-count")[0].innerText = this.inputKeyCount
+    $("#type-count")[0].innerText = inputKeyCount
     //更新错误数/回改数(退格键数)
-    $("#type-false")[0].innerText = this.typeFalseCount
+    $("#type-false")[0].innerText = typeFalseCount + $('#duizhaoqu-div .type-false').length
+    //更新回改
+    $("#type-back")[0].innerText = backModifyCount
     //更新已打
     //打完屏幕结尾更新文段上屏，下一段
     //更新当前段数
@@ -412,8 +411,8 @@ const computScore = () =>{
  * 首次跟打或继续跟打开启定时器
  */
 const openScoreTimerIfStartNow = () => {
-    if(this.scoreTimer === 0){
-        this.scoreTimer = window.setInterval(saveScoreAndPutOnScreen, 500)
+    if(scoreTimer === 0){
+        scoreTimer = window.setInterval(putScoreOnScreen, 500)
     }
 }
 
@@ -421,9 +420,9 @@ const openScoreTimerIfStartNow = () => {
  * 当跟打结束或暂停跟打时，使用此方法去除定时器
  */
 const removeScoreTimer = () =>{
-    if(this.scoreTimer !== 0){
-        window.clearInterval(this.scoreTimer)
-        this.scoreTimer = 0
+    if(scoreTimer !== 0){
+        window.clearInterval(scoreTimer)
+        scoreTimer = 0
     }
 }
 
@@ -431,11 +430,6 @@ const removeScoreTimer = () =>{
  * 更新输入键数
  */
 const updateInputKeyCount = () =>{
-    if(this.inputKeyCount === undefined || this.inputKeyCount === null){
-        this.inputKeyCount = 1
-    }
-    else{
-        this.inputKeyCount += 1
-    }
+    inputKeyCount += 1
 }
 
