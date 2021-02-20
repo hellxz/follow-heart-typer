@@ -88,10 +88,11 @@ ipcRenderer.on('chongda', () => {
     inputKeyCount = 0
     typeFalseCount = 0
     currentTypeCount = 0
-    $(".progress-bar").css("width", "0%")
+    
     clearGenda()
-    putScoreOnScreen()
     subsectionArticlePutFirstSectionOnScreen()
+    putScoreOnScreen()
+    $(".progress-bar").css("width", "0%")
 })
 
 ipcRenderer.on('zaiwen', () => {
