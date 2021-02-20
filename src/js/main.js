@@ -42,7 +42,15 @@ const createWindow = () => {
   // 绑定菜单，注册快捷键
   const menu = new Menu()
   menu.append(new MenuItem({
-    label: '载文',
+    label: '重打F3',
+    accelerator: 'F3',
+    click: () => {
+      console.log('restroke article now') 
+      mainWindow.send('chongda')
+    }
+  }))
+  menu.append(new MenuItem({
+    label: '载文F4',
     accelerator: 'F4',
     click: () => {
       console.log('load artile now') 
@@ -50,7 +58,7 @@ const createWindow = () => {
     }
   }))
   menu.append(new MenuItem({
-    label: '发文',
+    label: '发文F6',
     accelerator: 'F6',
     click: () => {
       console.log('send article now') 
@@ -59,7 +67,7 @@ const createWindow = () => {
   }))
 
   menu.append(new MenuItem({
-    label: '调试',
+    label: '调试F12',
     accelerator: 'F12',
     click: () => {
       console.log('help clicked') 

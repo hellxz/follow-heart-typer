@@ -116,6 +116,15 @@ $(function(){
         this.chineseInput = false
     })
 
+    ipcRenderer.on('chongda', () => {
+        console.log("重打事件触发")
+        //TODO 重置计时器、成绩
+        //重置发文段、清空跟打区
+        this.currentSendingSection = 1
+        clearGenda()
+        subsectionArticlePutFirstSectionOnScreen()
+    })
+
     ipcRenderer.on('zaiwen', () => {
         console.log("载文事件触发")
         loadArticleFromClipboard()
@@ -140,7 +149,7 @@ $(function(){
 
     //添加默认对照区提示
     const addDefaultDuiZhaoDiv = () => {
-        $('#duizhaoqu-div')[0].innerHTML = '<span id="default-duizhao-words">欢迎使用随心跟打器，祝您跟打愉快！发文请按F6，载文请按F4，调试请按F12</span>'
+        $('#duizhaoqu-div')[0].innerHTML = '<span id="default-duizhao-words">欢迎使用随心跟打器，祝您跟打愉快！发文请按F6，载文请按F4，重打请按F3，调试请按F12</span>'
     }
 
     /**
@@ -264,26 +273,22 @@ $(function(){
             }
             //判定着色
             if(i < gendaInputLength) { //只判定当前新输入部分（忽略上n段与当前段没打的部分）
-                // console.log(i)
                 let originClassName = $(span).attr('class')
-                
-                //首段打对
-                if(this.currentSendingSection === 1 && articleArray[i] === typeContent[i] ){
-                    $(span).removeClass()
-                    $(span).addClass('type-true')
-                    continue
-                }
 
-                //非首段打对   TIPS:——>for in循环的下标是字符串
+                //首段与非首段打对   TIPS:——>for in循环的下标i是字符串，另外首段后边的乘式为0，不影响结果
                 let inputIndex = parseInt(i) + (this.currentSendingSection -1) * this.maxSpanSumPerScreen
-                if(articleArray[i] === typeContent[inputIndex]){
+                
+                let duizhao = articleArray[i]
+                let input = typeContent[inputIndex]
+                //打对状态
+                let inputCorrect = false
+                let status1 = duizhao.charCodeAt(0) === 160 && input.charCodeAt(0) === 32
+                let status2 = duizhao.charCodeAt(0) === 32 && input.charCodeAt(0) === 160
+                if(duizhao === input || status1 || status2){
                     $(span).removeClass()
                     $(span).addClass('type-true')
-                    continue
                 }
-
-                //打错
-                if(originClassName !== 'type-false'){
+                else{
                     $(span).removeClass()
                     $(span).addClass('type-false')
                     console.log('有打错的哦~')

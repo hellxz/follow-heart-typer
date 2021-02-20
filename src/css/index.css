@@ -10,9 +10,8 @@ body{
   height: 90%;
   width: 100%;
 }
-#tips-bar{
-  position: relative;
-  width: 785px;
+#status-bar{
+  outline: brown solid medium;
 }
 #tips-content{
   position: relative;
