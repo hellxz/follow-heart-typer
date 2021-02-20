@@ -9,8 +9,6 @@ $(function(){
     let currentArticle = ''
     //当前文章总字数
     let currentArticleWordsCount = 0
-    //当前文章打字数
-    let currentSessionTypeCount = 0
     
     //当前文章Map
     let currentArticleMap = new Map();
@@ -25,12 +23,15 @@ $(function(){
     /* 跟打状态 */
     //当前跟打状态
     let isTyping = false
+    //停打
+    let stopTyping = false
     //发文状态：自动/手动下一段 TODO
     let sendArticleAutomic = true
     //是否自动发送成绩
     let sendTypeResultAutomic = false
     //中文输入状态
     let chineseInput = false
+    
     
 
     /* 当前成绩 */
@@ -46,6 +47,8 @@ $(function(){
     let typeFalseCount = 0
     //回改数
     let backModifyCount = 0
+    //输入键数
+    let inputKeyCount = 0
     //开始时间
     let startTime = 0
     //持续时间
@@ -83,42 +86,32 @@ $(function(){
         if(! this.chineseInput){
             console.log("在打英文")
             refreshTypeStatus()
-        }
-        if(e.keyCode === 8){ //退格键
-            if(this.backModifyCount !== undefined){
-                this.backModifyCount += 1
-            }
-            else{
-                this.backModifyCount = 1
-            }
-            console.log("当前回改数为" + this.backModifyCount)
+            //刚开始跟打时，启动成绩计算定时器
+            openScoreTimerIfStartNow()
         }
     })
 
-    //计算回改数
     $('#genda').on('keyup', (e) => {
         console.log("按键抬起")
-        if(e.keyCode === 8){ //退格键
-            if(this.backModifyCount !== undefined){
-                this.backModifyCount += 1
-            }
-            else{
-                this.backModifyCount = 1
-            }
-            console.log("当前回改数为" + this.backModifyCount)
-        }
+        //更新回改数
+        updateBackModifyCount(e.keyCode)
+        //更新输入键数
+        updateInputKeyCount()
     })
 
     $('#genda').on('compositionend', (e) => {
         console.log("打完中文了")
-        console.log(os.platform())
         refreshTypeStatus()
         this.chineseInput = false
+        //刚开始跟打时，启动成绩计算定时器
+        openScoreTimerIfStartNow()
     })
 
     ipcRenderer.on('chongda', () => {
         console.log("重打事件触发")
         //TODO 重置计时器、成绩
+        this.startTime = null
+        removeScoreTimer()
         //重置发文段、清空跟打区
         this.currentSendingSection = 1
         clearGenda()
@@ -255,6 +248,11 @@ $(function(){
             remote.dialog.showErrorBox('错误提示','请先载文或发文再进行跟打');
             return false
         }
+
+        //设置起始时间
+        if(this.startTime === undefined || this.startTime === null){
+            this.startTime = new Date().getTime()
+        }
         
         let articleArray = this.currentArticleMap.get(this.currentSendingSection)
         let typeContent = document.getElementById("genda").innerText
@@ -280,10 +278,10 @@ $(function(){
                 
                 let duizhao = articleArray[i]
                 let input = typeContent[inputIndex]
-                //打对状态
-                let inputCorrect = false
+
                 let status1 = duizhao.charCodeAt(0) === 160 && input.charCodeAt(0) === 32
                 let status2 = duizhao.charCodeAt(0) === 32 && input.charCodeAt(0) === 160
+
                 if(duizhao === input || status1 || status2){
                     $(span).removeClass()
                     $(span).addClass('type-true')
@@ -313,9 +311,6 @@ $(function(){
         if($("#duizhaoqu-div .type-none").length !== 0){
             return false
         }
-        
-        //保存当前记录，打算由定时器实现成绩上屏
-        //stopTheWorldSaveData()
 
         //判定是否有下一页，有则跳转下一页，无则限制跟打区输入
         let nextSendingSection = this.currentSendingSection + 1
@@ -328,27 +323,9 @@ $(function(){
             $("#genda").attr('contenteditable', false)
             shell.beep()
             //停止定时器，结算最终成绩存文件或存库
-            stopTheWorldSaveData()
+            removeScoreTimer()
+            saveScoreAndPutOnScreen(true)
         }
-    }
-
-    /**
-     * 记录当前页跟打错字数
-     * TODO: 使用定时器实现
-     */
-    const stopTheWorldSaveData = () =>{
-        console.log('停一小会儿，掏小本本记成绩~')
-        
-        //TODO 暂停计时器
-        //记录当前成绩
-        //记录开始时间
-        //记录击键数：Linux可能会有点误差
-        //更新错误数/回改数(退格键数)
-        //更新已打
-        //打完屏幕结尾更新文段上屏，下一段
-        //更新当前段数
-        //记录结束时间
-        //计算成绩
     }
 
     /**
@@ -376,4 +353,94 @@ $(function(){
         return result
     }
 
+    /**
+     * 更新回改数
+     * @param keyCode 按键Ascii编码
+     */
+    const updateBackModifyCount = (keyCode) => {
+        if(keyCode === 8){ //退格键
+            if(this.backModifyCount !== undefined){
+                this.backModifyCount += 1
+            }
+            else{
+                this.backModifyCount = 1
+            }
+            console.log("当前回改数为" + this.backModifyCount)
+        }
+    }
+
+    /**
+     * 记录成绩并上屏
+     * @param saveDB 是否保存到数据库
+     */
+    const saveScoreAndPutOnScreen = () =>{
+        console.log('停一小会儿，掏小本本记成绩~')
+        computScore()
+        //记录当前成绩
+        //记录开始时间
+        //记录击键数：Linux可能会有点误差
+        //更新错误数/回改数(退格键数)
+        //更新已打
+        //打完屏幕结尾更新文段上屏，下一段
+        //更新当前段数
+        //记录结束时间
+        //计算成绩
+        
+    }
+
+    const computScore = () =>{
+
+    }
+
+    /**
+     * 首次跟打或继续跟打开启定时器
+     */
+    const openScoreTimerIfStartNow = () => {
+        this.isTyping = true
+    }
+
+    /**
+     * 当跟打结束或暂停跟打时，使用此方法去除定时器
+     */
+    const removeScoreTimer = () =>{
+        if(this.scoreTimer !== undefined && this.scoreTimer !== null){
+            window.clearInterval(this.scoreTimer)
+        }
+    }
+
+    /**
+     * 更新输入键数
+     */
+    const updateInputKeyCount = () =>{
+        if(this.inputKeyCount === undefined || this.inputKeyCount === null){
+            this.inputKeyCount = 1
+        }
+        else{
+            this.inputKeyCount += 1
+        }
+    }
+
+    //成绩定时器
+    
 })
+
+var scoreTimer = window.setInterval(saveScoreAndPutOnScreen1, 1000)
+
+function clearIntervals(id){
+    window.clearInterval(id)
+}
+
+function saveScoreAndPutOnScreen1 () {
+    console.log('停一小会儿，掏小本本记成绩~~~')
+    // computScore()
+    //记录当前成绩
+    //记录开始时间
+    //记录击键数：Linux可能会有点误差
+    //更新错误数/回改数(退格键数)
+    //更新已打
+    //打完屏幕结尾更新文段上屏，下一段
+    //更新当前段数
+    //记录结束时间
+    //计算成绩
+    
+}
