@@ -23,6 +23,8 @@ let maxSpanSumPerScreen = 0
 let isTyping = false
 //停打
 let stopTyping = false
+//当前已打
+let currentTypeCount = 0
 //发文状态：自动/手动下一段 TODO
 let sendArticleAutomic = true
 //是否自动发送成绩
@@ -33,7 +35,6 @@ let chineseInput = false
 let timerInterval = 500
 //成绩定时器
 let scoreTimer = 0
-
 
 
 
@@ -80,13 +81,16 @@ ipcRenderer.on('window-blur', () => {
 ipcRenderer.on('chongda', () => {
     console.log("重打事件触发")
     //TODO 重置计时器、成绩
-    startTime = null
+    startTime = 0
     removeScoreTimer(scoreTimer)
     //重置发文段、清空跟打区
     currentSendingSection = 1
-    inputKeyCount=0
-    typeFalseCount=0
+    inputKeyCount = 0
+    typeFalseCount = 0
+    currentTypeCount = 0
+    $(".progress-bar").css("width", "0%")
     clearGenda()
+    putScoreOnScreen()
     subsectionArticlePutFirstSectionOnScreen()
 })
 
@@ -263,7 +267,7 @@ const refreshTypeStatus = () => {
     }
 
     //设置起始时间
-    if(startTime === undefined || startTime === null){
+    if(startTime === 0){
         startTime = new Date().getTime()
     }
     
@@ -331,6 +335,9 @@ const checkIsLastOrTurn2NextPage = () =>{
     let nextSendingSection = currentSendingSection + 1
     if(nextSendingSection <= currentSectionSum){
         //TODO 添加记录本页成绩功能
+        typeFalseCount += $('#duizhaoqu-div .type-false').length
+        currentTypeCount +=  $('#duizhaoqu-div').children().length
+
         putSectionOnScreen(nextSendingSection)
         currentSendingSection = nextSendingSection
     }
@@ -341,6 +348,7 @@ const checkIsLastOrTurn2NextPage = () =>{
         //停止定时器，结算最终成绩存文件或存库
         removeScoreTimer(scoreTimer)
         //TODO 存库上屏
+        currentTypeCount +=  $('#duizhaoqu-div').children().length
     }
 }
 
@@ -396,10 +404,14 @@ const putScoreOnScreen = () =>{
     //更新回改
     $("#type-back")[0].innerText = backModifyCount
     //更新已打
+    let typed = $('#duizhaoqu-div').children().length - $('#duizhaoqu-div .type-none').length + currentTypeCount
+    $("#typed-words")[0].innerText = typed
     //打完屏幕结尾更新文段上屏，下一段
     //更新当前段数
     //记录结束时间
     //计算成绩
+    //更新进度条
+    $(".progress-bar").css("width", typed / currentArticle.length * 100 + "%")
     
 }
 
@@ -412,7 +424,7 @@ const computScore = () =>{
  */
 const openScoreTimerIfStartNow = () => {
     if(scoreTimer === 0){
-        scoreTimer = window.setInterval(putScoreOnScreen, 500)
+        scoreTimer = window.setInterval(putScoreOnScreen, timerInterval)
     }
 }
 
