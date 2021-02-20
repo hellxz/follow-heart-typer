@@ -1,30 +1,17 @@
 const { app, ipcRenderer, remote, shell } = require('electron')
+const os = require('os')
 window.$ = window.jQuery = require('jquery');
 
 $(function(){
 
-    //速度：瞬时速度，单位 字/min
-    let speed = 0
-    //击键：每秒击键数
-    let typeCountPerSecond = 0
-    //码长：打每个字平均击键数
-    let keyLong = 0
-    //键准：未知
-    let typeAccuracy = 0
-    //当前文章打字数
-    let currentSessionTypeCount = 0
+    /* 当前跟打文章数据 */
+    //当前文章内容
+    let currentArticle = ''
     //当前文章总字数
     let currentArticleWordsCount = 0
-    //错字数
-    let typeFalseCount = 0
-    //本日打字数
-    let typeTodaySum = 0
-    //历史打字总数
-    let typeHistorySum = 0
-    //当前跟打状态
-    let isTyping = false
-    //当前文章
-    let currentArticle = ''
+    //当前文章打字数
+    let currentSessionTypeCount = 0
+    
     //当前文章Map
     let currentArticleMap = new Map();
     //当前文章分段总数
@@ -33,12 +20,46 @@ $(function(){
     let currentSendingSection = 0
     //当前对照区最多可发的字数(span数)
     let maxSpanSumPerScreen = 0
-    //发文状态：自动/手动下一段
+
+
+    /* 跟打状态 */
+    //当前跟打状态
+    let isTyping = false
+    //发文状态：自动/手动下一段 TODO
     let sendArticleAutomic = true
     //是否自动发送成绩
     let sendTypeResultAutomic = false
     //中文输入状态
     let chineseInput = false
+    
+
+    /* 当前成绩 */
+    //速度：瞬时速度，单位 字/min
+    let speed = 0
+    //击键：每秒击键数
+    let typeCountPerSecond = 0
+    //码长：打每个字平均击键数
+    let keyLong = 0
+    //键准：未知
+    let typeAccuracy = 0
+    //错字数
+    let typeFalseCount = 0
+    //回改数
+    let backModifyCount = 0
+    //开始时间
+    let startTime = 0
+    //持续时间
+    let duration = 0
+    //暂停状态
+    let pauseState = false
+    //暂停次数
+    let pauseTimes = 0
+
+    /* 历史记录数据 */
+    //本日打字数，需查记录文件或数据库
+    let typeTodaySum = 0
+    //历史打字总数，需查记录文件或数据库
+    let typeHistorySum = 0
 
 
     //初始化
@@ -64,12 +85,33 @@ $(function(){
             refreshTypeStatus()
         }
         if(e.keyCode === 8){ //退格键
-            //TODO: 回改数+1
+            if(this.backModifyCount !== undefined){
+                this.backModifyCount += 1
+            }
+            else{
+                this.backModifyCount = 1
+            }
+            console.log("当前回改数为" + this.backModifyCount)
+        }
+    })
+
+    //计算回改数
+    $('#genda').on('keyup', (e) => {
+        console.log("按键抬起")
+        if(e.keyCode === 8){ //退格键
+            if(this.backModifyCount !== undefined){
+                this.backModifyCount += 1
+            }
+            else{
+                this.backModifyCount = 1
+            }
+            console.log("当前回改数为" + this.backModifyCount)
         }
     })
 
     $('#genda').on('compositionend', (e) => {
         console.log("打完中文了")
+        console.log(os.platform())
         refreshTypeStatus()
         this.chineseInput = false
     })
@@ -267,10 +309,10 @@ $(function(){
             return false
         }
         
-        //保存当前记录
-        stopTheWorldSaveData()
+        //保存当前记录，打算由定时器实现成绩上屏
+        //stopTheWorldSaveData()
 
-        //判定是否有下一页，有则跳转下一页再次开始计时，无则停止，限制跟打区输入
+        //判定是否有下一页，有则跳转下一页，无则限制跟打区输入
         let nextSendingSection = this.currentSendingSection + 1
         if(nextSendingSection <= this.currentSectionSum){
             putSectionOnScreen(nextSendingSection)
@@ -280,11 +322,14 @@ $(function(){
             //打字完成，限制跟打区输入
             $("#genda").attr('contenteditable', false)
             shell.beep()
+            //停止定时器，结算最终成绩存文件或存库
+            stopTheWorldSaveData()
         }
     }
 
     /**
      * 记录当前页跟打错字数
+     * TODO: 使用定时器实现
      */
     const stopTheWorldSaveData = () =>{
         console.log('停一小会儿，掏小本本记成绩~')
