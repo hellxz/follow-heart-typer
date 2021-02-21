@@ -2,11 +2,6 @@
 const { app, BrowserWindow, ipcMain, Menu, MenuItem } = require('electron')
 const path = require('path');
 
-// Handle creating/removing shortcuts on Windows when installing/uninstalling.
-if (require('electron-squirrel-startup')) { // eslint-disable-line global-require
-  app.quit();
-}
-
 const createWindow = () => {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
@@ -24,7 +19,7 @@ const createWindow = () => {
   mainWindow.loadFile(path.join(__dirname, '../index.html'));
 
   // Open the DevTools.
-  mainWindow.webContents.openDevTools();
+  // mainWindow.webContents.openDevTools();
 
   //使用webContents的did-finish-load事件来达到启动时加载功能
   mainWindow.webContents.on('did-finish-load', () => {

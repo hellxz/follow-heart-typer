@@ -22,40 +22,34 @@
       "packagerConfig": {},
       "makers": [
         {
-          "name": "@electron-forge/maker-squirrel",
-          "config": {
-            "name": "follow_heart_typer"
-          }
-        },
-        {
-          "name": "@electron-forge/maker-zip",
-          "platforms": [
-            "darwin"
-          ]
-        },
-        {
           "name": "@electron-forge/maker-deb",
-          "config": {}
-        },
-        {
-          "name": "@electron-forge/maker-rpm",
-          "config": {}
+          "config": {
+            "options": {
+              "version": "0.0.1",
+              "description": "随心跟打器",
+              "genericName": "follow-heart-typer",
+              "icon": "./src/asset/icon.png",
+              "maintainer": "Hellxz <hellxz001@foxmail.com>",
+              "name": "follow-heart-typer",
+              "bin": "./follow-heart-typer",
+              "categories": [
+                "Game",
+                "Utility"
+              ]
+            }
+          }
         }
       ]
     }
   },
   "dependencies": {
-    "@fortawesome/fontawesome-free": "^5.14.0",
-    "bootstrap": "^4.5.2",
-    "electron-squirrel-startup": "^1.0.0",
+    "@fortawesome/fontawesome-free": "^5.15.2",
+    "bootstrap": "^4.6.0",
     "jquery": "^3.5.1"
   },
   "devDependencies": {
-    "@electron-forge/cli": "6.0.0-beta.52",
+    "@electron-forge/cli": "^6.0.0-beta.54",
     "@electron-forge/maker-deb": "6.0.0-beta.52",
-    "@electron-forge/maker-rpm": "6.0.0-beta.52",
-    "@electron-forge/maker-squirrel": "6.0.0-beta.52",
-    "@electron-forge/maker-zip": "6.0.0-beta.52",
     "electron": "9.1.2"
   }
 }
