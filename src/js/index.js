@@ -1,19 +1,16 @@
-const { app, ipcRenderer, remote, shell } = require('electron')
+const { app, ipcRenderer, remote } = require('electron')
 const os = require('os')
 window.$ = window.jQuery = require('jquery');
 
 /* 当前跟打文章数据 */
 //当前文章内容
 let currentArticle = ''
-//当前文章总字数
-let currentArticleWordsCount = 0
-
 //当前文章Map
 let currentArticleMap = new Map();
-//当前文章分段总数
-let currentSectionSum = 0
-//当前文章发文段数
-let currentSendingSection = 0
+//当前文章分页总数
+let currentPagingSum = 0
+//当前文章发文页数
+let currentTypingPage = 0
 //当前对照区最多可发的字数(span数)
 let maxSpanSumPerScreen = 0
 
@@ -68,6 +65,9 @@ let typeTodaySum = 0
 //历史打字总数，需查记录文件或数据库
 let typeHistorySum = 0
 
+/* 调试 */
+let debug = true
+
 //初始化
 ipcRenderer.on('main-window-ready', () => {
     addDefaultDuiZhaoDiv()
@@ -75,44 +75,41 @@ ipcRenderer.on('main-window-ready', () => {
 
 //窗口焦点消失
 ipcRenderer.on('window-blur', () => {
-    removeScoreTimer(scoreTimer)
+    // removeScoreTimer(scoreTimer)
 })
 
 ipcRenderer.on('chongda', () => {
-    console.log("重打事件触发")
-    //TODO 重置计时器、成绩
-    startTime = 0
-    removeScoreTimer(scoreTimer)
-    //重置发文段、清空跟打区
-    currentSendingSection = 1
-    inputKeyCount = 0
-    typeFalseCount = 0
-    currentTypeCount = 0
-    
+
+    debugLoging("重打事件触发")
+    //首页上屏
+    renderedPage2Screen(1)
+    isTyping = false
+    stopTyping = false
+    //清理成绩和进度条
+    clearScoreAndProgress()
+    //清理跟打区记录,设置可读写
     clearGenda()
-    subsectionArticlePutFirstSectionOnScreen()
-    putScoreOnScreen()
-    $(".progress-bar").css("width", "0%")
 })
 
 ipcRenderer.on('zaiwen', () => {
-    console.log("载文事件触发")
+    debugLoging("载文事件触发")
     loadArticleFromClipboard()
 })
 
 ipcRenderer.on('fawen', () => {
-    console.log("发文事件触发")
+    debugLoging("发文事件触发")
     sendArticleFromSqlLite()
 })
 
 ipcRenderer.on('window-resize', () => {
-    console.log("改变窗口size事件触发")
+    debugLoging("改变窗口size事件触发")
     let defaultDiv = document.getElementById("default-duizhao-words")
     if(defaultDiv === null){
         if(currentArticle === ''){
             addDefaultDuiZhaoDiv()
         }else{
-            subsectionArticlePutFirstSectionOnScreen()
+            //重新计算分页，首页上屏
+            pagingAndRenderedFirstPage2Screen()
         }
     }
 })
@@ -128,32 +125,32 @@ $(function(){
      */
     $('#genda').on('compositionstart', (e) => {
         chineseInput = true
-        console.log("正在打中文，还没打完呢！")
+        debugLoging("正在打中文，还没打完呢！")
     })
 
     $('#genda').on('input', (e) => {
         if(! chineseInput){
-            console.log("在打英文")
-            refreshTypeStatus()
+            debugLoging("在打英文")
             //刚开始跟打时，启动成绩计算定时器
-            openScoreTimerIfStartNow()
+            openScoreTimerIfAbsent()
+            refreshTypeStatus()
         }
     })
 
     $('#genda').on('keyup', (e) => {
-        console.log("按键抬起")
+        debugLoging("按键抬起")
         //更新回改数
         updateBackModifyCount(e.keyCode)
         //更新输入键数
-        updateInputKeyCount()
+        updateInputKeyCount(e.keyCode)
     })
 
     $('#genda').on('compositionend', (e) => {
-        console.log("打完中文了")
+        debugLoging("打完中文了")
+        //刚开始跟打时，启动成绩计算定时器
+        openScoreTimerIfAbsent()
         refreshTypeStatus()
         chineseInput = false
-        //刚开始跟打时，启动成绩计算定时器
-        openScoreTimerIfStartNow()
     })
 
 })
@@ -167,10 +164,11 @@ const addDefaultDuiZhaoDiv = () => {
  * 剪贴板载文上屏
  */
 const loadArticleFromClipboard = () => {
-    console.log('载文方法触发')
+    debugLoging('载文方法触发')
     const { clipboard } = require('electron')
+    //TODO 未对特殊字符进行替换，如不换行的空格、换行符等
     currentArticle = clipboard.readText('selection')
-    subsectionArticlePutFirstSectionOnScreen()
+    pagingAndRenderedFirstPage2Screen()
 }
 
 /**
@@ -180,7 +178,7 @@ const sendArticleFromSqlLite = () => {
     //TODO 数据库读取文章，将赋值给currentArticle渲染上屏
     // ipcRenderer.send('read-article-from-sqllite') //示例，后续可能会通过子容器传递
     currentArticle = '听见你说：朝阳起又落，晴雨难测，道路是脚步多，我已习惯，你突然间的自我，挥挥洒洒，将自然看通透~那就不要留时光一过不再有，你远眺的天空，挂更多的彩虹，我会轻轻地，将你豪情放在心头，在寒冬时候，就回忆你温柔。听见你说：朝阳起又落，晴雨难测，道路是脚步多，我已习惯，你突然间的自我，挥挥洒洒，将自然看通透~那就不要留时光一过不再有，你远眺的天空，挂更多的彩虹，我会轻轻地，将你豪情放在心头，在寒冬时候，就回忆你温柔。听见你说：朝阳起又落，晴雨难测，道路是脚步多，我已习惯，你突然间的自我，挥挥洒洒，将自然看通透~那就不要留时光一过不再有，你远眺的天空，挂更多的彩虹，我会轻轻地，将你豪情放在心头，在寒冬时候，就回忆你温柔。'
-    subsectionArticlePutFirstSectionOnScreen()
+    pagingAndRenderedFirstPage2Screen()
 }
 
 /**
@@ -189,28 +187,29 @@ const sendArticleFromSqlLite = () => {
 const loadArticleFromQQgroup = () => {
     //TODO c语言类库读取操作系统参数完成功能
     currentArticle = fromQQGroup()
-    subsectionArticlePutFirstSectionOnScreen()
+    //TODO 未对群载文进行语法分析
+    pagingAndRenderedFirstPage2Screen()
 }
 
 /**
- * 分段文章并上屏首段
+ * 分页文章并首页文字上屏
  * 
  * TODO: 问题：为什么理论div宽度允许放下整好宽度的div，却会换行？ 
  *       示例：div宽320px，span宽32px，按理讲可放10个第一行，但是假如第9个span是个符号的（也是32px宽），第十列会换行！
  */
-const subsectionArticlePutFirstSectionOnScreen = () => {
+const pagingAndRenderedFirstPage2Screen = () => {
     //读取文字div长宽
     let duizhaoDiv = $("#duizhaoqu-div")
     let divWidth = parseInt(duizhaoDiv.width())
     let divHeight = parseInt(duizhaoDiv.height())
-    let spanSize = computeSpanWhitchUnderDivSize('duizhaoqu-div')
+    let spanSize = computeDivChildrenSpanSize('duizhaoqu-div')
     //计算对照区最多可装多少span，不考虑余数（只少不能多）
     let horizontalSpanCount = parseInt(divWidth / spanSize.width)
     let verticalSpanCount = parseInt(divHeight / spanSize.height)
     maxSpanSumPerScreen = horizontalSpanCount * verticalSpanCount //Mark:临时方案，每屏减5个span，为测试先不加
-    console.log("当前div最多放"+ maxSpanSumPerScreen + "个span")
+    debugLoging("当前div最多放"+ maxSpanSumPerScreen + "个span")
 
-    //载文分段
+    //载文分页
     currentArticleMap = new Map()
     
     let articleArray = currentArticle.split('')
@@ -221,8 +220,8 @@ const subsectionArticlePutFirstSectionOnScreen = () => {
         sectionCount = tempCount + 1
     }
 
-    currentSectionSum = sectionCount
-    currentSendingSection = 1
+    currentPagingSum = sectionCount
+    currentTypingPage = 1
 
     let tempArray
     for(i=0; i<sectionCount; i++){
@@ -231,35 +230,41 @@ const subsectionArticlePutFirstSectionOnScreen = () => {
         currentArticleMap.set(i+1, tempArray)
     }
 
-    //上屏前清理当前屏幕上的历史映像，开启可输入状态
-    putSectionOnScreen(1)
+    //首页上屏
+    renderedPage2Screen(1)
+    //清理成绩和进度条
+    clearScoreAndProgress()
+    //清理跟打区并开启可输入状态
     clearGenda()
-    $("#genda").attr('contenteditable', true)
 }
 
 /**
  * 渲染文章段，移除默认提示，载文上屏
- * @param {待上屏的段号} nextSection 
+ * @param nextPage 待上屏的页码，从1开始
  */
-const putSectionOnScreen = (nextSection) => {
-    let nextSectionArray = currentArticleMap.get(nextSection)
+const renderedPage2Screen = (nextPage) => {
+    let nextPageArray = currentArticleMap.get(nextPage)
     let spanHTML = ''
-    for (var i in nextSectionArray) {
-        spanHTML += '<span class="type-none">' + nextSectionArray[i] + '</span>'
+    for (var i in nextPageArray) {
+        spanHTML += '<span class="type-none">' + nextPageArray[i] + '</span>'
     }
     $('#default-duizhao-words').remove();
     $("#duizhaoqu-div").html(spanHTML)
 }
 
+/**
+ * 清理跟打区,设置可写状态
+ */
 const clearGenda = () => {
     $("#genda").empty()
+    $("#genda").attr('contenteditable', true)
 }
 
 /**
  * 更新跟打判定
  */
 const refreshTypeStatus = () => {
-    console.log('更新判定执行')
+    debugLoging('更新判定执行')
     let defaultDiv = document.getElementById("default-duizhao-words")
     if(defaultDiv !== null){
         clearGenda()
@@ -272,7 +277,7 @@ const refreshTypeStatus = () => {
         startTime = new Date().getTime()
     }
     
-    let articleArray = currentArticleMap.get(currentSendingSection)
+    let articleArray = currentArticleMap.get(currentTypingPage)
     let typeContent = document.getElementById("genda").innerText
     let spans = $('#duizhaoqu-div').children()
 
@@ -280,36 +285,38 @@ const refreshTypeStatus = () => {
         let span = spans[i]
         //确定当前对照区与跟打区对应的比对区间
         let gendaInputLength = 0
-        if(currentSendingSection == 1){
+        if(currentTypingPage == 1){
             gendaInputLength = typeContent.length //首段
         }
         else{
             //非首段，应使用输入长度减去已翻页的部分
-            gendaInputLength = typeContent.length - (currentSendingSection -1) * maxSpanSumPerScreen
+            gendaInputLength = typeContent.length - (currentTypingPage -1) * maxSpanSumPerScreen
         }
         //判定着色
         if(i < gendaInputLength) { //只判定当前新输入部分（忽略上n段与当前段没打的部分）
             //首段与非首段打对   TIPS:——>for in循环的下标i是字符串，另外首段后边的乘式为0，不影响结果
-            let inputIndex = parseInt(i) + (currentSendingSection -1) * maxSpanSumPerScreen
+            let inputIndex = parseInt(i) + (currentTypingPage -1) * maxSpanSumPerScreen
             
             let duizhao = articleArray[i]
             let input = typeContent[inputIndex]
 
-            let status1 = duizhao.charCodeAt(0) === 160 && input.charCodeAt(0) === 32
-            let status2 = duizhao.charCodeAt(0) === 32 && input.charCodeAt(0) === 160
+            //对特殊空格进行判断，只要对照与跟打输入的都是空格，即认定为相同
+            let scene1 = duizhao.charCodeAt(0) === 160 && input.charCodeAt(0) === 32
+            let scene2 = duizhao.charCodeAt(0) === 32 && input.charCodeAt(0) === 160
 
-            if(duizhao === input || status1 || status2){
+            //对照区与跟打区相等，判对直接跳过循环
+            if(duizhao === input || scene1 || scene2){
                 $(span).removeClass()
                 $(span).addClass('type-true')
                 //$('#duizhaoqu-div .type-true').length
                 continue
             }
             
-            //防止回删等按键被记成错词
+            //判错，只对非错误标识的文字进行变色
             if($(span).attr('class') !== 'type-false'){
                 $(span).removeClass()
                 $(span).addClass('type-false')
-                console.log('有打错的哦~')
+                debugLoging('有打错的哦~')
             }
         }
         //移除未跟打span着色(回改)
@@ -320,50 +327,53 @@ const refreshTypeStatus = () => {
     }
 
     // 检查是否需要翻页
-    checkIsLastOrTurn2NextPage()
+    checkIfLastOrTurn2NextPage()
 }
 
 /**
  * 检测到达页尾及翻页实现
  */
-const checkIsLastOrTurn2NextPage = () =>{
+const checkIfLastOrTurn2NextPage = () =>{
     //未打完跳过
     if($("#duizhaoqu-div .type-none").length !== 0){
         return false
     }
 
     //判定是否有下一页，有则跳转下一页，无则限制跟打区输入
-    let nextSendingSection = currentSendingSection + 1
-    if(nextSendingSection <= currentSectionSum){
+    let nextPage = currentTypingPage + 1
+    if(nextPage <= currentPagingSum){
         //TODO 添加记录本页成绩功能
         typeFalseCount += $('#duizhaoqu-div .type-false').length
         currentTypeCount +=  $('#duizhaoqu-div').children().length
 
-        putSectionOnScreen(nextSendingSection)
-        currentSendingSection = nextSendingSection
+        renderedPage2Screen(nextPage)
+        currentTypingPage = nextPage
     }
     else{
         //打字完成，限制跟打区输入
         $("#genda").attr('contenteditable', false)
-        shell.beep()
         //停止定时器，结算最终成绩存文件或存库
         removeScoreTimer(scoreTimer)
         //TODO 存库上屏
-        currentTypeCount +=  $('#duizhaoqu-div').children().length
+        // currentTypeCount +=  $('#duizhaoqu-div').children().length
+        inputKeyCount += 1 //击键数在停止时会漏1次
+        calculateAndRenderScore2Screen()
+        stopTyping = true
+        isTyping = false
     }
 }
 
 /**
  * 计算指定div下的span的offsetHeight与offsetWidth
- * @param {div的id} divElementId 
+ * @param divId div的id
  */
-const computeSpanWhitchUnderDivSize = (divElementId) => {
+const computeDivChildrenSpanSize = (divId) => {
     let result = {}
     let testWord = '我'
     let span = document.createElement("span")
     span.id = 'testFontSizeSpan'
     span.style.visibility = "hidden";
-    let element = document.getElementById(divElementId)
+    let element = document.getElementById(divId)
     span.style.fontSize = window.getComputedStyle(element).fontSize
     span.style.fontFamily = window.getComputedStyle(element).fontFamily
     element.appendChild(span)
@@ -385,17 +395,15 @@ const computeSpanWhitchUnderDivSize = (divElementId) => {
 const updateBackModifyCount = (keyCode) => {
     if(keyCode === 8){ //退格键
         backModifyCount += 1
-        console.log("当前回改数为" + backModifyCount)
+        debugLoging("当前回改数为" + backModifyCount)
     }
 }
 
 /**
  * 记录成绩并上屏
- * @param saveDB 是否保存到数据库
  */
-const putScoreOnScreen = () =>{
-    console.log('停一小会儿，掏小本本记成绩~')
-    computScore()
+const calculateAndRenderScore2Screen = () =>{
+    debugLoging('停一小会儿，掏小本本记成绩~当前定时器id:'+scoreTimer)
     //记录当前成绩
     //记录开始时间
     //记录击键数：Linux可能会有点误差
@@ -410,22 +418,39 @@ const putScoreOnScreen = () =>{
     //打完屏幕结尾更新文段上屏，下一段
     //更新当前段数
     //记录结束时间
-    //计算成绩
+    //计算速度
+    // typed /
     //更新进度条
     $(".progress-bar").css("width", typed / currentArticle.length * 100 + "%")
     
 }
 
-const computScore = () =>{
-    
+/**
+ * 清理记分与进度条，恢复跟打开始前状态
+ */
+const clearScoreAndProgress = () =>{
+    //重置计时器、成绩
+    startTime = 0
+    removeScoreTimer(scoreTimer)
+    //重置发文段、清空跟打区
+    currentTypingPage = 1
+    inputKeyCount = 0
+    typeFalseCount = 0
+    currentTypeCount = 0
+    backModifyCount = 0
+    $("#type-count")[0].innerText = inputKeyCount
+    $("#type-false")[0].innerText = typeFalseCount
+    $("#type-back")[0].innerText = backModifyCount
+    $("#typed-words")[0].innerText = currentTypeCount
+    $(".progress-bar").css("width", "0%")
 }
 
 /**
  * 首次跟打或继续跟打开启定时器
  */
-const openScoreTimerIfStartNow = () => {
+const openScoreTimerIfAbsent = () => {
     if(scoreTimer === 0){
-        scoreTimer = window.setInterval(putScoreOnScreen, timerInterval)
+        scoreTimer = window.setInterval(calculateAndRenderScore2Screen, timerInterval)
     }
 }
 
@@ -442,7 +467,16 @@ const removeScoreTimer = () =>{
 /**
  * 更新输入键数
  */
-const updateInputKeyCount = () =>{
-    inputKeyCount += 1
+const updateInputKeyCount = (keyCode) =>{
+    //排除F1~F12计算键数
+    if(keyCode < 112 || keyCode > 123){
+        inputKeyCount += 1
+    }
+}
+
+const debugLoging = (msg) =>{
+    if(debug){
+        console.log(msg)
+    }
 }
 
