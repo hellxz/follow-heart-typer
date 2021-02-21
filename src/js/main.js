@@ -24,7 +24,7 @@ const createWindow = () => {
   mainWindow.loadFile(path.join(__dirname, '../index.html'));
 
   // Open the DevTools.
-  mainWindow.webContents.openDevTools();
+  // mainWindow.webContents.openDevTools();
 
   //使用webContents的did-finish-load事件来达到启动时加载功能
   mainWindow.webContents.on('did-finish-load', () => {

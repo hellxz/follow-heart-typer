@@ -1,5 +1,6 @@
 const { app, ipcRenderer, remote } = require('electron')
 const os = require('os')
+const HellxzUtil = require('./js/util')
 window.$ = window.jQuery = require('jquery');
 
 /* 当前跟打文章数据 */
@@ -41,7 +42,7 @@ let speed = 0
 //击键：每秒击键数
 let typeCountPerSecond = 0
 //码长：打每个字平均击键数
-let keyLong = 0
+let typeLong = 0
 //键准：未知
 let typeAccuracy = 0
 //错字数
@@ -346,8 +347,8 @@ const checkIfLastOrTurn2NextPage = () =>{
     let nextPage = currentTypingPage + 1
     if(nextPage <= currentPagingSum){
         //TODO 添加记录本页成绩功能
-        typeFalseCount += $('#duizhaoqu-div .type-false').length
-        currentTypeCount +=  $('#duizhaoqu-div').children().length
+        // typeFalseCount += $('#duizhaoqu-div .type-false').length
+        // currentTypeCount +=  $('#duizhaoqu-div').children().length
 
         renderedPage2Screen(nextPage)
         currentTypingPage = nextPage
@@ -415,9 +416,9 @@ const calculateAndRenderScore2Screen = () =>{
     $("#type-false")[0].innerText = typeFalseCount + $('#duizhaoqu-div .type-false').length
     //更新回改
     $("#type-back")[0].innerText = backModifyCount
-    //更新已打
-    let typedWordsCount = $('#duizhaoqu-div').children().length - $('#duizhaoqu-div .type-none').length + currentTypeCount
-    $("#typed-words")[0].innerText = typedWordsCount
+    //更新已打，当前页码 * 每页最大字数 - 未打数
+    currentTypeCount = currentTypingPage * maxSpanSumPerScreen - $('#duizhaoqu-div .type-none').length
+    $("#typed-words")[0].innerText = currentTypeCount
     //记录结束时间
     //计算跟打持续时间
     let currentTime = new Date().getTime()
@@ -428,12 +429,21 @@ const calculateAndRenderScore2Screen = () =>{
         duration += currentTime - lastStartTime
     }
     debugLoging("startTime:" + startTime + " 当前时间：" + currentTime + " duration:" + duration + " lastStartTime:" + lastStartTime)
-    //计算速度并上屏
-    let tempSpeed = typedWordsCount / (duration / 1000 / 60)
-    speed = Math.floor(tempSpeed * 100) / 100
+    
+    //计算速度并上屏，速度 = 已打字数 / 打字时间（分）
+    speed = HellxzUtil.numFloor(currentTypeCount / HellxzUtil.timestampToMinutes(duration))
     $("#type-speed")[0].innerText = speed
+    
+    //计算击键并上屏，总击键数 / 打字时间（秒）
+    typeCountPerSecond =  HellxzUtil.numFloor(inputKeyCount / HellxzUtil.timestampToSeconds(duration))
+    $("#type-per-seconds")[0].innerText = typeCountPerSecond
+    
+    //计算码长并上屏，总按键数 / 已打字数
+    typeLong = HellxzUtil.numFloor(inputKeyCount / currentTypeCount)
+    $("#type-long")[0].innerText = typeLong
+
     //更新进度条
-    $(".progress-bar").css("width", typedWordsCount / currentArticle.length * 100 + "%")
+    $(".progress-bar").css("width", currentTypeCount / currentArticle.length * 100 + "%")
     
 }
 
@@ -442,14 +452,22 @@ const calculateAndRenderScore2Screen = () =>{
  */
 const clearScoreAndProgress = () =>{
     //重置计时器、成绩
-    startTime = 0
     removeScoreTimer(scoreTimer)
     //重置发文段、清空跟打区
+    speed = 0
+    typeCountPerSecond = 0
+    typeLong = 0
+    duration = 0
     currentTypingPage = 1
     inputKeyCount = 0
     typeFalseCount = 0
     currentTypeCount = 0
     backModifyCount = 0
+
+    //上屏
+    $("#type-speed")[0].innerText = speed
+    $("#type-per-seconds")[0].innerText = typeCountPerSecond
+    $("#type-long")[0].innerText = typeLong
     $("#type-count")[0].innerText = inputKeyCount
     $("#type-false")[0].innerText = typeFalseCount
     $("#type-back")[0].innerText = backModifyCount
@@ -491,4 +509,3 @@ const debugLoging = (msg) =>{
         console.log(msg)
     }
 }
-
