@@ -17,14 +17,8 @@ let maxSpanSumPerScreen = 0
 
 
 /* 跟打状态 */
-//当前跟打状态
-let isTyping = false
-//停打
-let stopTyping = false
 //当前已打
 let currentTypeCount = 0
-//发文状态：自动/手动下一段 TODO
-let sendArticleAutomic = true
 //是否自动发送成绩
 let sendTypeResultAutomic = false
 //中文输入状态
@@ -55,8 +49,8 @@ let inputKeyCount = 0
 let startTime = 0
 //持续时间
 let duration = 0
-//上次开始时间
-let lastStartTime = 0
+//上次计算duration的时间
+let lastTimekeeping = 0
 //暂停状态
 let pauseState = false
 //暂停次数
@@ -79,7 +73,7 @@ ipcRenderer.on('main-window-ready', () => {
 
 //窗口焦点消失
 ipcRenderer.on('window-blur', () => {
-    // removeScoreTimer(scoreTimer)
+    pauseGenda()
 })
 
 ipcRenderer.on('chongda', () => {
@@ -87,8 +81,6 @@ ipcRenderer.on('chongda', () => {
     debugLoging("重打事件触发")
     //首页上屏
     renderedPage2Screen(1)
-    isTyping = false
-    stopTyping = false
     //清理成绩和进度条
     clearScoreAndProgress()
     //清理跟打区记录,设置可读写
@@ -347,8 +339,7 @@ const checkIfLastOrTurn2NextPage = () =>{
     let nextPage = currentTypingPage + 1
     if(nextPage <= currentPagingSum){
         //TODO 添加记录本页成绩功能
-        // typeFalseCount += $('#duizhaoqu-div .type-false').length
-        // currentTypeCount +=  $('#duizhaoqu-div').children().length
+        typeFalseCount += $('#duizhaoqu-div .type-false').length
 
         renderedPage2Screen(nextPage)
         currentTypingPage = nextPage
@@ -357,13 +348,11 @@ const checkIfLastOrTurn2NextPage = () =>{
         //打字完成，限制跟打区输入
         $("#genda").attr('contenteditable', false)
         //停止定时器，结算最终成绩存文件或存库
-        removeScoreTimer(scoreTimer)
+        removeScoreTimer()
         //TODO 存库上屏
         // currentTypeCount +=  $('#duizhaoqu-div').children().length
         inputKeyCount += 1 //击键数在停止时会漏1次
         calculateAndRenderScore2Screen()
-        stopTyping = true
-        isTyping = false
     }
 }
 
@@ -419,16 +408,17 @@ const calculateAndRenderScore2Screen = () =>{
     //更新已打，当前页码 * 每页最大字数 - 未打数
     currentTypeCount = currentTypingPage * maxSpanSumPerScreen - $('#duizhaoqu-div .type-none').length
     $("#typed-words")[0].innerText = currentTypeCount
-    //记录结束时间
     //计算跟打持续时间
     let currentTime = new Date().getTime()
     if(pauseTimes === 0){
         duration = currentTime - startTime
     }
-    else{
-        duration += currentTime - lastStartTime
+    else {
+        //lastTimekeeping为上一次计算duration的时间，暂停后的恢复由恢复操作重新赋值
+        duration += currentTime - lastTimekeeping
     }
-    debugLoging("startTime:" + startTime + " 当前时间：" + currentTime + " duration:" + duration + " lastStartTime:" + lastStartTime)
+    lastTimekeeping = currentTime
+    debugLoging("startTime:" + startTime + " 当前时间：" + currentTime + " duration:" + duration + " lastTimekeeping:" + lastTimekeeping)
     
     //计算速度并上屏，速度 = 已打字数 / 打字时间（分）
     speed = HellxzUtil.numFloor(currentTypeCount / HellxzUtil.timestampToMinutes(duration))
@@ -452,17 +442,21 @@ const calculateAndRenderScore2Screen = () =>{
  */
 const clearScoreAndProgress = () =>{
     //重置计时器、成绩
-    removeScoreTimer(scoreTimer)
+    removeScoreTimer()
     //重置发文段、清空跟打区
     speed = 0
     typeCountPerSecond = 0
     typeLong = 0
-    duration = 0
     currentTypingPage = 1
     inputKeyCount = 0
     typeFalseCount = 0
     currentTypeCount = 0
     backModifyCount = 0
+
+    pauseTimes = 0
+    pauseState = false
+    lastTimekeeping = 0
+    duration = 0
 
     //上屏
     $("#type-speed")[0].innerText = speed
@@ -476,11 +470,31 @@ const clearScoreAndProgress = () =>{
 }
 
 /**
+ * 暂停跟打
+ * 步骤：
+ * 1、结束成绩上屏定时器
+ * 2、设置暂停状态
+ * 3、设置暂停次数
+ */
+const pauseGenda = () =>{
+    debugLoging("暂停跟打~我累了")
+    removeScoreTimer()
+    pauseState = true
+    pauseTimes += 1
+}
+
+/**
  * 首次跟打或继续跟打开启定时器
  */
 const openScoreTimerIfAbsent = () => {
     if(scoreTimer === 0){
+        //恢复跟打
+        if(pauseState){
+            pauseState = false
+            lastTimekeeping = new Date().getTime()
+        }
         scoreTimer = window.setInterval(calculateAndRenderScore2Screen, timerInterval)
+        debugLoging("创建新的定时器，id:" + scoreTimer)
     }
 }
 
