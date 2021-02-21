@@ -20,7 +20,7 @@
             <th>回改</th>
             <th>错字</th>
             <th>已打</th>
-            <th>总键数</th>
+            <th>键数</th>
           </tr>
         </thead>
         <tbody>
@@ -38,22 +38,22 @@
       
       <div class="text-input">
         <div class="form-group mt-3" id="duizhaoqu-div">
-          <!-- <span class="type-true">你</span><span class="type-none">在</span><span class="type-true">里</span><span class="type-true">你</span><span class="type-true">在</span><span class="type-true">我</span><span class="type-false">心</span><span class="type-true">里</span><span class="type-true">你</span><span class="type-true">在</span><span class="type-true">我</span><span class="type-false">心</span><span class="type-true">里</span><span class="type-true">你</span><span class="type-true">在</span><span class="type-true">里</span><span class="type-true">你</span><span class="type-true">在</span><span class="type-true">我</span><span class="type-false">心</span><span class="type-true">里</span><span class="type-true">你</span><span class="type-true">在</span><span class="type-true">我</span><span class="type-false">心</span><span class="type-true">里</span> -->
+          <!-- 对照区结构示例 -->
+          <!-- <span class="type-true">你</span><span class="type-false">在</span><span class="type-none">里</span>-->
         </div>
         <div class="form-group mt-1" id="gendaqu-div">
-          <!-- <textarea id="genda"></textarea> -->
           <div id="genda" contenteditable="true"></div>
         </div>
       </div>
       <div class="fixed-bottom md-6">
         <div id="list-group list-group-horizontal d-flex justify-content-between">
-          <span class="badge badge-primary ml-3 mr-1">QQ群:指爱</span>
-          <span class="badge badge-secondary mr-1">潜水中</span>
-          <span class="badge badge-success mr-1">跟打中</span>
-          <span class="badge badge-danger mr-1">暂停中</span>
-          <span class="badge badge-warning mr-1">发文中</span>
-          <span class="badge badge-info mr-1">今日打字数:99999</span>
-          <span class="badge badge-dark mr-1">历史打字数:9999999</span>
+          <button type="button" class="btn btn-outline-secondary btn-sm active ml-3">跟打完成</button>
+          <button type="button" class="btn btn-outline-success btn-sm active">跟打中</button>
+          <button type="button" class="btn btn-outline-danger btn-sm active">暂停中</button>
+          <button type="button" class="btn btn-outline-warning btn-sm active">复制成绩</button>
+          <button type="button" class="btn btn-outline-info btn-sm active">显示提示界面</button>
+          <button type="button" class="btn btn-success btn-sm">今日跟打字数：10000</button>
+          <button type="button" class="btn btn-success btn-sm">历史跟打字数：99999</button>
         </div>
 
         <div class="progress mt-1">

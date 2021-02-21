@@ -1,6 +1,7 @@
 const { app, ipcRenderer, remote } = require('electron')
 const os = require('os')
 const HellxzUtil = require('./js/util')
+const { clipboard } = require('electron')
 window.$ = window.jQuery = require('jquery');
 
 /* 当前跟打文章数据 */
@@ -77,7 +78,6 @@ ipcRenderer.on('window-blur', () => {
 })
 
 ipcRenderer.on('chongda', () => {
-
     debugLoging("重打事件触发")
     //首页上屏
     renderedPage2Screen(1)
@@ -161,10 +161,23 @@ const addDefaultDuiZhaoDiv = () => {
  */
 const loadArticleFromClipboard = () => {
     debugLoging('载文方法触发')
-    const { clipboard } = require('electron')
     //TODO 未对特殊字符进行替换，如不换行的空格、换行符等
     currentArticle = clipboard.readText('selection')
     pagingAndRenderedFirstPage2Screen()
+}
+
+/**
+ * 向剪贴板复制成绩
+ */
+const sendCompleteToClipboard = () => {
+    debugLoging('向剪贴板复制成绩')
+    clipboard.writeText("速度" + speed
+                        +" 击键" + typeCountPerSecond
+                        +" 码长" + typeLong
+                        +" 字数" + currentArticle.length
+                        +" 回改" + backModifyCount
+                        +" 错字" + typeFalseCount
+                        +" 键数" + inputKeyCount)
 }
 
 /**
@@ -304,7 +317,6 @@ const refreshTypeStatus = () => {
             if(duizhao === input || scene1 || scene2){
                 $(span).removeClass()
                 $(span).addClass('type-true')
-                //$('#duizhaoqu-div .type-true').length
                 continue
             }
             
@@ -353,6 +365,9 @@ const checkIfLastOrTurn2NextPage = () =>{
         // currentTypeCount +=  $('#duizhaoqu-div').children().length
         inputKeyCount += 1 //击键数在停止时会漏1次
         calculateAndRenderScore2Screen()
+        typeFalseCount = $("#type-false")[0].innerText
+        //复制成绩到剪贴板
+        sendCompleteToClipboard()
     }
 }
 
@@ -405,21 +420,24 @@ const calculateAndRenderScore2Screen = () =>{
     $("#type-false")[0].innerText = typeFalseCount + $('#duizhaoqu-div .type-false').length
     //更新回改
     $("#type-back")[0].innerText = backModifyCount
-    //更新已打，当前页码 * 每页最大字数 - 未打数
-    currentTypeCount = currentTypingPage * maxSpanSumPerScreen - $('#duizhaoqu-div .type-none').length
+    //更新已打，前几页已打全部 + 上屏数
+    currentTypeCount = (currentTypingPage -1) * maxSpanSumPerScreen + ($('#duizhaoqu-div').children().length - $('#duizhaoqu-div .type-none').length)
     $("#typed-words")[0].innerText = currentTypeCount
     //计算跟打持续时间
     let currentTime = new Date().getTime()
     if(pauseTimes === 0){
         duration = currentTime - startTime
+        debugLoging("--------无暂停记录，duration=" + duration)
     }
     else {
         //lastTimekeeping为上一次计算duration的时间，暂停后的恢复由恢复操作重新赋值
         duration += currentTime - lastTimekeeping
+        // duration += timerInterval
+        debugLoging("--------有暂停记录，duration=" + duration)
     }
-    lastTimekeeping = currentTime
     debugLoging("startTime:" + startTime + " 当前时间：" + currentTime + " duration:" + duration + " lastTimekeeping:" + lastTimekeeping)
-    
+    lastTimekeeping = currentTime
+
     //计算速度并上屏，速度 = 已打字数 / 打字时间（分）
     speed = HellxzUtil.numFloor(currentTypeCount / HellxzUtil.timestampToMinutes(duration))
     $("#type-speed")[0].innerText = speed
@@ -456,6 +474,7 @@ const clearScoreAndProgress = () =>{
     pauseTimes = 0
     pauseState = false
     lastTimekeeping = 0
+    startTime = 0
     duration = 0
 
     //上屏
@@ -490,8 +509,8 @@ const openScoreTimerIfAbsent = () => {
     if(scoreTimer === 0){
         //恢复跟打
         if(pauseState){
-            pauseState = false
             lastTimekeeping = new Date().getTime()
+            pauseState = false
         }
         scoreTimer = window.setInterval(calculateAndRenderScore2Screen, timerInterval)
         debugLoging("创建新的定时器，id:" + scoreTimer)
