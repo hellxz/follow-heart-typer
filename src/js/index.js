@@ -54,10 +54,13 @@ let inputKeyCount = 0
 let startTime = 0
 //持续时间
 let duration = 0
+//上次开始时间
+let lastStartTime = 0
 //暂停状态
 let pauseState = false
 //暂停次数
 let pauseTimes = 0
+
 
 /* 历史记录数据 */
 //本日打字数，需查记录文件或数据库
@@ -413,15 +416,24 @@ const calculateAndRenderScore2Screen = () =>{
     //更新回改
     $("#type-back")[0].innerText = backModifyCount
     //更新已打
-    let typed = $('#duizhaoqu-div').children().length - $('#duizhaoqu-div .type-none').length + currentTypeCount
-    $("#typed-words")[0].innerText = typed
-    //打完屏幕结尾更新文段上屏，下一段
-    //更新当前段数
+    let typedWordsCount = $('#duizhaoqu-div').children().length - $('#duizhaoqu-div .type-none').length + currentTypeCount
+    $("#typed-words")[0].innerText = typedWordsCount
     //记录结束时间
-    //计算速度
-    // typed /
+    //计算跟打持续时间
+    let currentTime = new Date().getTime()
+    if(pauseTimes === 0){
+        duration = currentTime - startTime
+    }
+    else{
+        duration += currentTime - lastStartTime
+    }
+    debugLoging("startTime:" + startTime + " 当前时间：" + currentTime + " duration:" + duration + " lastStartTime:" + lastStartTime)
+    //计算速度并上屏
+    let tempSpeed = typedWordsCount / (duration / 1000 / 60)
+    speed = Math.floor(tempSpeed * 100) / 100
+    $("#type-speed")[0].innerText = speed
     //更新进度条
-    $(".progress-bar").css("width", typed / currentArticle.length * 100 + "%")
+    $(".progress-bar").css("width", typedWordsCount / currentArticle.length * 100 + "%")
     
 }
 
