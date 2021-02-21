@@ -6,9 +6,37 @@
 
 跟打器的作用在于提升用户打字速度、准度，也可以作为休闲娱乐活动 :sweat_smile:
 
+目前仅适用于Linux平台，暂未测试其他平台。
+
 ## :key:快速开始
 
-> 暂未发布安装程式，待续
+目前提供两种形式的程式：`tar.gz` 与 `deb`
+
+如果是APT系的Linux发行版，如 Debian/Ubuntu及其子发行版，请下载 `deb` 格式程序
+
+### 安装方式
+
+deb 格式包
+
+```bash
+#使用dpkg包管理器 或 gdebi等安装器安装deb包
+sudo dpkg -i follow-heart-typer-*.deb -y
+#安装完成可直接使用以下命令 或 应用菜单快捷方式打开
+follow-heart-typer
+```
+
+tar.gz 格式
+
+```bash
+#解压tar.gz
+tar zxf follow-heart-typer-*.tar.gz
+#进入解压目录
+cd follow-heart-typer-linux-x64/
+#执行二进制文件
+./follow-heart-typer
+```
+
+
 
 ## :egg:开发调试环境
 
@@ -81,10 +109,30 @@ yarn start
 ### 5、开发调试技巧、简单说明
 
 -   项目运行后，会开启调式窗口
-
 -   应用运行期间，可以修改代码，通过在调试窗口执行Ctrl+R以刷新页面（仅支持渲染页面）
 -   electron会创建一个主窗口，它的权力是最大的，可以完成很多操作，如创建窗口等
 -   其他渲染页面与主窗口使用IPC通信（主窗口执有`ipcMain`，渲染页面执有`ipcRenderer`，分别使用这两个对象进行监听事件）
 -   修改窗口级代码，需要重运行项目才生效
 -   暂时未提供打包的配置（无CI无配置平台）
 -   临时想到这，etc
+
+### 6、构建打包
+
+随心跟打器使用 electron-forge 进行构建与打包，可以分开解释
+
+#### 构建二进制
+
+```bash
+yarn package
+```
+
+>   自动根据平台进行打包，其他平台用户可以尝试
+
+#### 打成 deb 包
+
+```bash
+yarn make
+```
+
+>   环境需要在 Debian/Ubuntu及子发行版下构建
+
