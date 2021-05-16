@@ -56,6 +56,8 @@ let lastTimekeeping = 0
 let pauseState = false
 //暂停次数
 let pauseTimes = 0
+//发送成绩前缀
+let scoreStrPrefix = ''
 
 
 /* 历史记录数据 */
@@ -161,8 +163,10 @@ const addDefaultDuiZhaoDiv = () => {
  */
 const loadArticleFromClipboard = () => {
     debugLoging('载文方法触发')
-    //TODO 未对特殊字符进行替换，如不换行的空格、换行符等
-    currentArticle = clipboard.readText('selection')
+    //载文时重置发文前缀字符串
+    scoreStrPrefix = ''
+    //处理赛文段
+    currentArticle = contestArticleHandle(clipboard.readText('selection'))
     pagingAndRenderedFirstPage2Screen()
 }
 
@@ -171,13 +175,19 @@ const loadArticleFromClipboard = () => {
  */
 const sendCompleteToClipboard = () => {
     debugLoging('向剪贴板复制成绩')
-    clipboard.writeText("速度" + speed
-                        +" 击键" + typeCountPerSecond
-                        +" 码长" + typeLong
-                        +" 字数" + currentArticle.length
-                        +" 回改" + backModifyCount
-                        +" 错字" + typeFalseCount
-                        +" 键数" + inputKeyCount)
+    let score = "速度" + speed
+                + " 击键" + typeCountPerSecond
+                + " 码长" + typeLong
+                + " 字数" + currentArticle.length
+                + " 回改" + backModifyCount
+                + " 错字" + typeFalseCount
+                + " 键数" + inputKeyCount
+    if(scoreStrPrefix != ''){
+        clipboard.writeText(scoreStrPrefix+' '+score)
+    }
+    else{
+        clipboard.writeText(score)
+    }
 }
 
 /**
@@ -537,8 +547,35 @@ const updateInputKeyCount = (keyCode) =>{
     }
 }
 
+/**
+ * debug日志输出，关闭debug时不再输出日志内容
+ * @param 消息串 msg 
+ */
 const debugLoging = (msg) =>{
     if(debug){
         console.log(msg)
     }
+}
+
+/**
+ * 处理赛文段，移除首尾无须跟打部分内容，去除换行符、空格等字符，记录段号
+ * @param contestArticle 未处理的赛文段
+ */
+const contestArticleHandle = (contestArticle) =>{
+    //换行符
+    if(contestArticle.indexOf('\n') != -1){
+        if(contestArticle.indexOf("赛文") != -1){
+            //移除赛文头部无用信息
+            contestArticle = contestArticle.slice(contestArticle.indexOf('\n')+1)
+            //记录赛文段号，发成绩时使用
+            let prefixIndex = contestArticle.search(/第\d{3}段/)
+            scoreStrPrefix = contestArticle.slice(prefixIndex, prefixIndex+5)
+            //移除赛文段号标识，无需跟打此部分
+            contestArticle = contestArticle.slice(0, contestArticle.lastIndexOf('\n'))
+        }
+        contestArticle = contestArticle.replace('\n','')
+    }
+    contestArticle = contestArticle.replace(' ','')
+    debugLoging(contestArticle)
+    return contestArticle
 }
