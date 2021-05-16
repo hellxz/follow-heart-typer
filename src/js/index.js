@@ -449,15 +449,15 @@ const calculateAndRenderScore2Screen = () =>{
     lastTimekeeping = currentTime
 
     //计算速度并上屏，速度 = 已打字数 / 打字时间（分）
-    speed = HellxzUtil.numFloor(currentTypeCount / HellxzUtil.timestampToMinutes(duration))
+    speed = HellxzUtil.numToFixed(currentTypeCount / HellxzUtil.timestampToMinutes(duration))
     $("#type-speed")[0].innerText = speed
     
     //计算击键并上屏，总击键数 / 打字时间（秒）
-    typeCountPerSecond =  HellxzUtil.numFloor(inputKeyCount / HellxzUtil.timestampToSeconds(duration))
+    typeCountPerSecond =  HellxzUtil.numToFixed(inputKeyCount / HellxzUtil.timestampToSeconds(duration))
     $("#type-per-seconds")[0].innerText = typeCountPerSecond
     
     //计算码长并上屏，总按键数 / 已打字数
-    typeLong = HellxzUtil.numFloor(inputKeyCount / currentTypeCount)
+    typeLong = HellxzUtil.numToFixed(inputKeyCount / currentTypeCount)
     $("#type-long")[0].innerText = typeLong
 
     //更新进度条
