@@ -124,16 +124,36 @@ $(function(){
      * - Mac平台未测
      */
     $('#genda').on('compositionstart', (e) => {
-        chineseInput = true
-        debugLoging("正在打中文，还没打完呢！")
+        if(os.platform() === "win32"){
+            chineseInput = true
+            debugLoging("正在打中文，还没打完呢！")
+        }
+    })
+
+    $('#genda').on('compositionend', (e) => {
+        if(os.platform() === "win32"){
+            debugLoging("打完中文了")
+            //刚开始跟打时，启动成绩计算定时器
+            openScoreTimerIfAbsent()
+            refreshTypeStatus()
+            chineseInput = false
+        }
     })
 
     $('#genda').on('input', (e) => {
-        if(! chineseInput){
+        if(os.platform() === "linux"){
             debugLoging("在打英文")
             //刚开始跟打时，启动成绩计算定时器
             openScoreTimerIfAbsent()
             refreshTypeStatus()
+        }
+        else if(os.platform() === "win32"){
+            if(! chineseInput){
+                debugLoging("在打英文")
+                //刚开始跟打时，启动成绩计算定时器
+                openScoreTimerIfAbsent()
+                refreshTypeStatus()
+            }
         }
     })
 
@@ -143,14 +163,6 @@ $(function(){
         updateBackModifyCount(e.keyCode)
         //更新输入键数
         updateInputKeyCount(e.keyCode)
-    })
-
-    $('#genda').on('compositionend', (e) => {
-        debugLoging("打完中文了")
-        //刚开始跟打时，启动成绩计算定时器
-        openScoreTimerIfAbsent()
-        refreshTypeStatus()
-        chineseInput = false
     })
 
     $('#copy-score').on('click', (e) => {
@@ -213,16 +225,6 @@ const sendArticleFromSqlLite = () => {
     //TODO 数据库读取文章，将赋值给currentArticle渲染上屏
     // ipcRenderer.send('read-article-from-sqllite') //示例，后续可能会通过子容器传递
     currentArticle = '听见你说：朝阳起又落，晴雨难测，道路是脚步多，我已习惯，你突然间的自我，挥挥洒洒，将自然看通透~那就不要留时光一过不再有，你远眺的天空，挂更多的彩虹，我会轻轻地，将你豪情放在心头，在寒冬时候，就回忆你温柔。听见你说：朝阳起又落，晴雨难测，道路是脚步多，我已习惯，你突然间的自我，挥挥洒洒，将自然看通透~那就不要留时光一过不再有，你远眺的天空，挂更多的彩虹，我会轻轻地，将你豪情放在心头，在寒冬时候，就回忆你温柔。听见你说：朝阳起又落，晴雨难测，道路是脚步多，我已习惯，你突然间的自我，挥挥洒洒，将自然看通透~那就不要留时光一过不再有，你远眺的天空，挂更多的彩虹，我会轻轻地，将你豪情放在心头，在寒冬时候，就回忆你温柔。'
-    pagingAndRenderedFirstPage2Screen()
-}
-
-/**
- * QQ群载文上屏
- */
-const loadArticleFromQQgroup = () => {
-    //TODO c语言类库读取操作系统参数完成功能
-    currentArticle = fromQQGroup()
-    //TODO 未对群载文进行语法分析
     pagingAndRenderedFirstPage2Screen()
 }
 
@@ -376,7 +378,6 @@ const checkIfLastOrTurn2NextPage = () =>{
     //判定是否有下一页，有则跳转下一页，无则限制跟打区输入
     let nextPage = currentTypingPage + 1
     if(nextPage <= currentPagingSum){
-        //TODO 添加记录本页成绩功能
         typeFalseCount += $('#duizhaoqu-div .type-false').length
 
         renderedPage2Screen(nextPage)
@@ -393,7 +394,6 @@ const checkIfLastOrTurn2NextPage = () =>{
         $($('#copy-score')[0]).addClass('active')
         gendaStatus = 1
         //TODO 存库上屏
-        // currentTypeCount +=  $('#duizhaoqu-div').children().length
         inputKeyCount += 1 //击键数在停止时会漏1次
         calculateAndRenderScore2Screen()
         typeFalseCount = $("#type-false")[0].innerText
