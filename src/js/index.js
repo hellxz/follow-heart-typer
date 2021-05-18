@@ -58,6 +58,8 @@ let pauseState = false
 let pauseTimes = 0
 //发送成绩前缀
 let scoreStrPrefix = ''
+//跟打状态:0-非完成状态，1-完成
+let gendaStatus = 0
 
 
 /* 历史记录数据 */
@@ -149,6 +151,20 @@ $(function(){
         openScoreTimerIfAbsent()
         refreshTypeStatus()
         chineseInput = false
+    })
+
+    $('#copy-score').on('click', (e) => {
+        if(gendaStatus === 1){
+            sendCompleteToClipboard()
+        }
+    })
+
+    $('#reset-default-screen').on('click', (e) => {
+        //清理成绩和进度条
+        clearScoreAndProgress()
+        //清理跟打区记录,设置可读写
+        clearGenda()
+        addDefaultDuiZhaoDiv()
     })
 
 })
@@ -371,6 +387,11 @@ const checkIfLastOrTurn2NextPage = () =>{
         $("#genda").attr('contenteditable', false)
         //停止定时器，结算最终成绩存文件或存库
         removeScoreTimer()
+        $($('#genda-status')[0]).text('跟打完成')
+        $($('#genda-status')[0]).removeClass('btn-outline-secondary')
+        $($('#genda-status')[0]).addClass('btn-outline-success')
+        $($('#copy-score')[0]).addClass('active')
+        gendaStatus = 1
         //TODO 存库上屏
         // currentTypeCount +=  $('#duizhaoqu-div').children().length
         inputKeyCount += 1 //击键数在停止时会漏1次
@@ -486,6 +507,7 @@ const clearScoreAndProgress = () =>{
     lastTimekeeping = 0
     startTime = 0
     duration = 0
+    gendaStatus = 0
 
     //上屏
     $("#type-speed")[0].innerText = speed
@@ -496,6 +518,11 @@ const clearScoreAndProgress = () =>{
     $("#type-back")[0].innerText = backModifyCount
     $("#typed-words")[0].innerText = currentTypeCount
     $(".progress-bar").css("width", "0%")
+    $($('#genda-status')[0]).text('暂未跟打')
+    $($('#genda-status')[0]).removeClass('btn-outline-danger')
+    $($('#genda-status')[0]).removeClass('btn-outline-success')
+    $($('#genda-status')[0]).addClass('btn-outline-secondary')
+    $($('#copy-score')[0]).removeClass('active')
 }
 
 /**
@@ -507,6 +534,11 @@ const clearScoreAndProgress = () =>{
  */
 const pauseGenda = () =>{
     debugLoging("暂停跟打~我累了")
+    if(gendaStatus === 0){
+        $($('#genda-status')[0]).text('跟打暂停')
+        $($('#genda-status')[0]).removeClass('btn-outline-secondary')
+        $($('#genda-status')[0]).addClass('btn-outline-danger')
+    }
     removeScoreTimer()
     pauseState = true
     pauseTimes += 1
@@ -517,10 +549,13 @@ const pauseGenda = () =>{
  */
 const openScoreTimerIfAbsent = () => {
     if(scoreTimer === 0){
+        $($('#genda-status')[0]).text('正在跟打')
         //恢复跟打
         if(pauseState){
             lastTimekeeping = new Date().getTime()
             pauseState = false
+            $($('#genda-status')[0]).removeClass('btn-outline-danger')
+            $($('#genda-status')[0]).addClass('btn-outline-secondary')
         }
         scoreTimer = window.setInterval(calculateAndRenderScore2Screen, timerInterval)
         debugLoging("创建新的定时器，id:" + scoreTimer)
@@ -564,7 +599,7 @@ const debugLoging = (msg) =>{
 const contestArticleHandle = (contestArticle) =>{
     //换行符
     if(contestArticle.indexOf('\n') != -1){
-        if(contestArticle.indexOf("赛文") != -1){
+        if(contestArticle.indexOf("赛文") != -1 || contestArticle.indexOf("联赛") != -1){
             //移除赛文头部无用信息
             contestArticle = contestArticle.slice(contestArticle.indexOf('\n')+1)
             //记录赛文段号，发成绩时使用

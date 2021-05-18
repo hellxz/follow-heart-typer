@@ -9,6 +9,7 @@
 body{
   height: 90%;
   width: 100%;
+  line-height: 1;
 }
 #status-bar{
   outline: brown solid medium;
@@ -28,16 +29,14 @@ body{
   width: 100%;
   font-size: 2rem;
   background-color: #FFFFFF;
-  /* border: 1px dashed darkgrey; */
   outline:darkgrey dashed medium;
   line-break: anywhere;
 }
 #gendaqu-div{
-  height: 30%;
+  height: 32%;
   width: 100%;
   font-size: 2rem;
   background-color: #FFFFFF;
-  /* border: 2px solid brown; */
   outline:brown solid medium;
 }
 #genda{
@@ -46,6 +45,10 @@ body{
   resize: none;
   overflow-y: scroll;
   overflow-x: none;
+}
+#bottom-button-group{
+  margin-left: 1em;
+  margin-right: 1em;
 }
 .type-true{
   color: green;

@@ -45,13 +45,11 @@
           <div id="genda" contenteditable="true"></div>
         </div>
       </div>
-      <div class="fixed-bottom md-6">
-        <div id="list-group list-group-horizontal d-flex justify-content-between">
-          <button type="button" class="btn btn-outline-secondary btn-sm active">跟打完成</button>
-          <button type="button" class="btn btn-outline-success btn-sm active">跟打中</button>
-          <button type="button" class="btn btn-outline-danger btn-sm active">暂停中</button>
-          <button type="button" class="btn btn-outline-warning btn-sm active">复制成绩</button>
-          <button type="button" class="btn btn-outline-info btn-sm active">显示提示界面</button>
+      <div class="fixed-bottom ">
+        <div class="list-group list-group-horizontal d-flex justify-content-between" id="bottom-button-group">
+          <button type="button" class="btn btn-outline-secondary btn-sm active" id="genda-status">暂未跟打</button>
+          <button type="button" class="btn btn-outline-warning btn-sm" id="copy-score">复制成绩</button>
+          <button type="button" class="btn btn-outline-info btn-sm active" id="reset-default-screen">显示提示界面</button>
           <button type="button" class="btn btn-success btn-sm">今日跟打字数：10000</button>
           <button type="button" class="btn btn-success btn-sm">历史跟打字数：99999</button>
         </div>
