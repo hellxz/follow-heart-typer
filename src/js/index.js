@@ -610,7 +610,7 @@ const contestArticleHandle = (contestArticle) =>{
         }
         contestArticle = contestArticle.replace('\n','')
     }
-    contestArticle = contestArticle.replace(' ','')
+    contestArticle = contestArticle.replace(/[\n\r]/g,'').replace(/\u21B5/g,'').replace(/\s+/g, '')
     debugLoging(contestArticle)
     return contestArticle
 }

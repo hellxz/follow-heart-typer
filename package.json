@@ -1,7 +1,7 @@
 {
   "name": "follow-heart-typer",
   "productName": "follow-heart-typer",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "随心跟打器",
   "main": "src/js/main.js",
   "scripts": {
@@ -25,7 +25,7 @@
           "name": "@electron-forge/maker-deb",
           "config": {
             "options": {
-              "version": "0.0.1",
+              "version": "0.0.2",
               "description": "随心跟打器",
               "genericName": "follow-heart-typer",
               "icon": "./src/asset/icon.png",
