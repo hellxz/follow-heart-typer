@@ -1,6 +1,7 @@
 //app表示当前electron，BrowserWindow为开启的窗口，ipcMain与子线程通信，Menu与MenuItem注册快捷键
 const { app, BrowserWindow, ipcMain, Menu, MenuItem } = require('electron')
 const path = require('path');
+const package = require('../../package.json')
 
 const createWindow = () => {
   // Create the browser window.
@@ -23,7 +24,7 @@ const createWindow = () => {
 
   //使用webContents的did-finish-load事件来达到启动时加载功能
   mainWindow.webContents.on('did-finish-load', () => {
-    mainWindow.send('main-window-ready')
+    mainWindow.send('main-window-ready', package.version)
   })
 
   mainWindow.on('resize', () => {
