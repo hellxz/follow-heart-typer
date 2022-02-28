@@ -65,12 +65,14 @@ let gendaStatus = 0
 /* 历史记录数据 */
 //本日打字数，需查记录文件或数据库
 let typeTodaySum = 0
+let typeTodayTempSum = 0
 //历史打字总数，需查记录文件或数据库
 let typeHistorySum = 0
+let typeHistoryTempSum = 0
 
 /* 调试 */
 let debug = true
-let softwareVersion;
+let softwareVersion
 
 //初始化
 ipcRenderer.on('main-window-ready', (event, arg) => {
@@ -100,7 +102,7 @@ ipcRenderer.on('zaiwen', () => {
 
 ipcRenderer.on('fawen', () => {
     debugLoging("发文事件触发")
-    sendArticleFromSqlLite()
+    sendArticleFromFile()
 })
 
 ipcRenderer.on('window-resize', () => {
@@ -224,9 +226,8 @@ const sendCompleteToClipboard = () => {
 /**
  * 数据库中选择文章，自动发文
  */
-const sendArticleFromSqlLite = () => {
-    //TODO 数据库读取文章，将赋值给currentArticle渲染上屏
-    // ipcRenderer.send('read-article-from-sqllite') //示例，后续可能会通过子容器传递
+const sendArticleFromFile = () => {
+    // ipcRenderer.send('read-article-from-file') //示例，后续可能会通过子容器传递
     currentArticle = '听见你说：朝阳起又落，晴雨难测，道路是脚步多，我已习惯，你突然间的自我，挥挥洒洒，将自然看通透~那就不要留时光一过不再有，你远眺的天空，挂更多的彩虹，我会轻轻地，将你豪情放在心头，在寒冬时候，就回忆你温柔。听见你说：朝阳起又落，晴雨难测，道路是脚步多，我已习惯，你突然间的自我，挥挥洒洒，将自然看通透~那就不要留时光一过不再有，你远眺的天空，挂更多的彩虹，我会轻轻地，将你豪情放在心头，在寒冬时候，就回忆你温柔。听见你说：朝阳起又落，晴雨难测，道路是脚步多，我已习惯，你突然间的自我，挥挥洒洒，将自然看通透~那就不要留时光一过不再有，你远眺的天空，挂更多的彩虹，我会轻轻地，将你豪情放在心头，在寒冬时候，就回忆你温柔。'
     pagingAndRenderedFirstPage2Screen()
 }
@@ -365,8 +366,22 @@ const refreshTypeStatus = () => {
         }
     }
 
+    //更新跟打记录
+    refreshTypeSum(currentTypeCount)
+
     // 检查是否需要翻页
     checkIfLastOrTurn2NextPage()
+}
+
+/**
+ * 更新跟打记录
+ */
+const refreshTypeSum = (typedSum) =>{
+    //今日、历史跟打数+1
+    typeTodayTempSum = typeTodaySum + typedSum
+    typeHistoryTempSum = typeHistorySum + typedSum
+    $($('#today-type-sum')[0]).text(typeTodayTempSum)
+    $($('#history-type-sum')[0]).text(typeHistoryTempSum)
 }
 
 /**
@@ -396,15 +411,32 @@ const checkIfLastOrTurn2NextPage = () =>{
         $($('#genda-status')[0]).addClass('btn-outline-success')
         $($('#copy-score')[0]).addClass('active')
         gendaStatus = 1
-        //TODO 存库上屏
         inputKeyCount += 1 //击键数在停止时会漏1次
         calculateAndRenderScore2Screen()
         typeFalseCount = $("#type-false")[0].innerText
+        
+        typeTodaySum = typeTodayTempSum
+        typeHistorySum = typeHistoryTempSum
+        typeTodayTempSum = typeHistoryTempSum = 0
+        saveScore(typeTodaySum, typeHistorySum)
+
         //复制成绩到剪贴板
         sendCompleteToClipboard()
     }
 }
 
+/**
+ * 保存成绩
+ */
+const saveScore = (today, history) => {
+    console.log("==========> 输出存储打字记录 today="+ today + " , history="+history)
+    let scoreObj = {
+        "today": today,
+        "history": history
+    }
+    console.log("==========> 输出存储打字记录 scoreObj="+ scoreObj)
+    ipcRenderer.send('save-score', scoreObj)
+}
 /**
  * 计算指定div下的span的offsetHeight与offsetWidth
  * @param divId div的id

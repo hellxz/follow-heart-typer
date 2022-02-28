@@ -2,6 +2,8 @@
 const { app, BrowserWindow, ipcMain, Menu, MenuItem } = require('electron')
 const path = require('path');
 const package = require('../../package.json')
+const DataStore = require('./data-store')
+let myStore = new DataStore({'name':'FollowHeartTyperData'})
 
 const createWindow = () => {
   // Create the browser window.
@@ -96,7 +98,6 @@ app.on('ready', createWindow);
 // for applications and their menu bar to stay active until the user quits
 // explicitly with Cmd + Q.
 app.on('window-all-closed', () => {
-  //TODO 记录成绩持久化数据库
   if (process.platform !== 'darwin') {
     app.quit();
   }
@@ -108,6 +109,12 @@ app.on('activate', () => {
   if (BrowserWindow.getAllWindows().length === 0) {
     createWindow();
   }
+});
+
+//保存成绩
+ipcMain.on('save-score', (event, data) => {
+  console.log("save-socre: "+data.today +'  ' + data.history)
+  myStore.saveRecord(data.today, data.history);
 });
 
 // In this file you can include the rest of your app's specific main process
