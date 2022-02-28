@@ -45,6 +45,7 @@
   "dependencies": {
     "@fortawesome/fontawesome-free": "^5.15.2",
     "bootstrap": "^4.6.0",
+    "electron-store": "^8.0.1",
     "jquery": "^3.5.1"
   },
   "devDependencies": {
