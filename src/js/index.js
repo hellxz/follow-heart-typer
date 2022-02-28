@@ -2,7 +2,7 @@ const { app, ipcRenderer, remote } = require('electron')
 const os = require('os')
 const HellxzUtil = require('./js/util')
 const { clipboard } = require('electron')
-window.$ = window.jQuery = require('jquery');
+window.$ = window.jQuery = require('jquery')
 
 /* 当前跟打文章数据 */
 //当前文章内容
@@ -70,9 +70,11 @@ let typeHistorySum = 0
 
 /* 调试 */
 let debug = true
+let softwareVersion;
 
 //初始化
-ipcRenderer.on('main-window-ready', () => {
+ipcRenderer.on('main-window-ready', (event, arg) => {
+    softwareVersion=arg;
     addDefaultDuiZhaoDiv()
 })
 
@@ -210,6 +212,7 @@ const sendCompleteToClipboard = () => {
                 + " 回改" + backModifyCount
                 + " 错字" + typeFalseCount
                 + " 键数" + inputKeyCount
+                + " 随心跟打器v" + softwareVersion;
     if(scoreStrPrefix != ''){
         clipboard.writeText(scoreStrPrefix+' '+score)
     }
