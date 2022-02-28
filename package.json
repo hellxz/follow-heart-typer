@@ -23,9 +23,11 @@
       "makers": [
         {
           "name": "@electron-forge/maker-deb",
+          "platforms": [
+            "linux"
+          ],
           "config": {
             "options": {
-              "version": "0.0.2",
               "description": "随心跟打器",
               "genericName": "follow-heart-typer",
               "icon": "./src/asset/icon.png",
@@ -36,6 +38,20 @@
                 "Game",
                 "Utility"
               ]
+            }
+          }
+        },
+        {
+          "name": "@electron-forge/maker-squirrel",
+          "platforms": [
+            "win32"
+          ],
+          "config": {
+            "options": {
+              "description": "随心跟打器",
+              "icon": "./src/asset/font.ico",
+              "maintainer": "Hellxz <hellxz001@foxmail.com>",
+              "name": "follow-heart-typer"
             }
           }
         }
@@ -51,6 +67,7 @@
   "devDependencies": {
     "@electron-forge/cli": "^6.0.0-beta.54",
     "@electron-forge/maker-deb": "6.0.0-beta.52",
+    "@electron-forge/maker-squirrel": "^6.0.0-beta.63",
     "electron": "9.4.0"
   }
 }
